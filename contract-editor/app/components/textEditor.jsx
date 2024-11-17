@@ -1,14 +1,15 @@
-"use client"
-import React from 'react';
-import { Editor } from '@monaco-editor/react';
+"use client";
+import React from "react";
+import { Editor } from "@monaco-editor/react"; //see https://github.com/suren-atoyan/monaco-react
 
-const TextEditor = () => {
+const TextEditor = ({ handleEditorChange }) => {
   return (
-    <div className='w-5/12 h-full border border-black'>
+    <div className="w-5/12 h-full">
       <Editor
         height="100%"
         defaultLanguage="plaintext"
-        theme="vs-dark"
+        theme="light"
+        onChange={handleEditorChange}
       />
     </div>
   );

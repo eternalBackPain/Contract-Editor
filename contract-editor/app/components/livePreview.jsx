@@ -1,9 +1,12 @@
-import React from 'react'
+import React from "react";
 
-const LivePreview = () => {
+const LivePreview = ({ htmlContent }) => {
   return (
-    <div className='w-5/12 border border-black'></div>
-  )
-}
+    <div
+      className="prose w-5/12"
+      dangerouslySetInnerHTML={{ __html: htmlContent }}
+    ></div>
+  );
+};
 
-export default LivePreview
+export default LivePreview;
