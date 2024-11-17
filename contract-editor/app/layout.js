@@ -1,5 +1,5 @@
 import NavBar from "./components/nav";
-import ToolBar from "./components/toolbar";
+import ToolBar from "./components/toolBar";
 import "./globals.css";
 
 export const metadata = {
@@ -12,11 +12,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       {/* body sets the container */}
-      <body className="bg-background text-foreground font-sans antialiased mb-40 mx-4 mt-2">
+      <body className="bg-background text-foreground font-sans antialiased h-screen border border-black">
         {/* main sets the alignment */}
-        <main className="flex flex-col">
-          <NavBar />
-          <ToolBar />
+        <main className="flex flex-col flex-grow h-full">
+          {/* <NavBar /> */}
           {children}
         </main>
       </body>
