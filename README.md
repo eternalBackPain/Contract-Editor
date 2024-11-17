@@ -1,4 +1,13 @@
 # Contract-Editor
+
+TODO:
+* fix the screen when there's a lot of text and the component seems to overflow
+* configure the tailwind 'prose' to be markdown compliant
+* start work on building backend
+
+
+## Overview
+
 An app for lawyers to draft contracts programmatically; an IDE for lawyers to draft contracts programatically (incl. the programmatic language).
 
 >"there is a crucial similarity between lawyers and programmers: the way they use words. Computer science and law are both linguistic professions. Programmers and lawyers use language to create, manipulate, and interpret complex abstractions. A programmer who uses the right words in the right way makes a computer do something. A lawyer who uses the right words in the right way changes people’s rights and obligations. There is a nearly exact analogy between the text of a program and the text of a law.": [[grimmelmannProgrammingLanguagesLaw2022]]
