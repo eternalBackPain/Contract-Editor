@@ -14,15 +14,16 @@ export default function Home() {
   const handleEditorChange = (value) => {
     setMarkdownContent(value);
     // console.log(markdownContent);
-    const html = marked.parse(markdownContent);
+    const html = marked.parse(value);
     setParsedHtml(html);
+    // send HTML to server
     console.log(parsedHtml)
   };
 
   return (
-    <div className="flex flex-col flex-grow h-full">
+    <div className="flex flex-col flex-grow h-screen w-screen">
       <ToolBar />
-      <div className="flex flex-row flex-grow h-full">
+      <div className="flex flex-row flex-grow h-full w-full">
         <TableOfContents />
         <TextEditor handleEditorChange={handleEditorChange}/>
         <LivePreview htmlContent={parsedHtml}/>

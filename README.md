@@ -1,9 +1,8 @@
 # Contract-Editor
 
-TODO:
-* fix the screen when there's a lot of text and the component seems to overflow
-* configure the tailwind 'prose' to be markdown compliant
-* start work on building backend
+TODO: start work on building backend (i.e. parser functions)!!!
+1. txt (i.e. the DSL language i create) --> JSON
+2. JSON --> PDF / DOCX
 
 
 ## Overview

@@ -16,6 +16,9 @@ module.exports = {
           css: {
             color: "#000000", // Set default text color to black
             fontFamily: "Arial, sans-serif", // Set default font to Arial
+            margin: 0, // Reset default margin
+            padding: 0, // Reset default padding
+            maxWidth: "none", // Remove max-width restrictions
           },
         },
       },
