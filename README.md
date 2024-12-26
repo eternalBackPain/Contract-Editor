@@ -23,7 +23,6 @@ The language to generate the contract may be approached in a couple different wa
 	* This could be implemented similarly to how the Accord Project builds their templating project. The text for Accord Project templates is written using markdown. It builds on the CommonMark standard so that any CommonMark document is valid text for a template or contract. Accord Project uses two extensions to CommonMark: CiceroMark for the contract text, and TemplateMark for the template grammar.
 	* Also, I could add parameters to these 'clause' blocks (e.g. a random ID, a clause reference) so that you can make cross references
 		* to allow for dynamic cross references, you would add event listeners to each clause block, and where the new state (i.e. the clause number) is different to the past state (i.e. the clause number before you made the amendment), you would update the cross reference
-	* However, if i am to use a markdown --> HTML method, I will need to know how the HTML would look like for a solid contract. This involves checking if 
 
 It would be a 'hybrid' contract. It would not be 'smart' and self-executable, however it could be adapted to do so.
 
@@ -41,45 +40,68 @@ I will use the following clause from the Master ICT Agreement of the MICTA/ICTA 
 ![MICTA Clauses](image.png)
 
 ### Psudo-code
-
 ```
-let "Contract Authority" = "means the contractual relationship between the parties comprising the terms and conditions set out in:
-(a)     a relevant"+<<Order>>+"; and
-(b)     the"+<<ICTA>>+"."
-let "MICTA" = ...
-let "Order Proposal" = "means a proposal in the form set out in "+<<Annexure D>>+"or in a form chosen by the "+<<Eligible Customer>>+" or the State of New South Wales."
-let "Supplier" = ...
-let "Contract" = ...
-let "Supplier's Activities" = ...
-let "ICT Activities" = ...
-let "Contract Authority" = ...
-let "Eligible Customer" = ...
-let "Order" = ...
-let "ICTA" = ...
-let "Eligible Customer" = ...
+–––––––––––––––––––––––––––––––––––––––––––––––––––––
+DEFINE TERMS (examples)
+–––––––––––––––––––––––––––––––––––––––––––––––––––––
 
-***
+Define "Contract Authority" as:
+    "means the relevant authority or agency executing this agreement..."
 
-{{##clause noGuaranteeOfWorkOrExclusivity}}
-## No guarantee of work or exclusivity 
+Define "MICTA" as:
+    "means the master ICT agreement..."
 
-The <<Contract Authority>> is not, by executing this <<MICTA>>:
+Define "Supplier" as:
+    "means the entity providing goods, services and/or other activities..."
 
-{{###clause}}bound to issue any <<Order Proposal>> to the <<Supplier>>;{{/clause}}
-{{###clause}}bound to engage the <<Supplier>> to supply any goods, services and/or other activities or to enter into any <<Contract>>; or{{/clause}}
-{{###clause}}restricted in any way from engaging any other person to supply any goods, services and/or other activities:{{/clause}}
-{{####clause}}of any type, including goods, services and/or other activities that are the same as or similar to any <<Supplier's Activities>> or <<ICT Activities>>; or{{/clause}}
-{{####clause}}at any location where, or in respect of any project that, the <<Supplier>> may be required to supply goods, services and/or other activities.{{/clause}}
+Define "Order Proposal" as:
+    "means a document proposing specific goods, services and/or other activities..."
 
-{{/clause}}
+Define "Contract" as:
+    "means any contract formed under or related to this arrangement..."
 
-{{##clause noRepresentation}}
-### No representation
+Define "Supplier's Activities" as:
+    "means the activities the Supplier undertakes under this agreement..."
 
-Clause {{ref noGuaranteeOfWorkOrExclusivity}}{{/ref}} applies even though the <<Contract Authority>> may have provided the <<Supplier>> with a forecast or estimate of the goods, services, <<ICT Activities>> and/or other activities that the <<Contract Authority>> or any <<Eligible Customer>> may require at any time. The <<Supplier>> acknowledges that any forecasts or estimates do not constitute a representation of the goods, services and/or other activities the <<Contract Authority>> or any <<Eligible Customer>> may require in any period.
+Define "ICT Activities" as:
+    "means any information, communications and technology-related activities..."
 
-{{/clause}}
+Define "Eligible Customer" as:
+    "means any customer eligible to place orders under this agreement..."
 
+–––––––––––––––––––––––––––––––––––––––––––––––––––––
+CLAUSES
+–––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+# No guarantee of work or exclusivity {id:noGuaranteeOfWorkOrExclusivity}
+
+The {{Contract Authority}} is not, by executing this {{MICTA}}:
+
+(a) bound to issue any {{Order Proposal}} to the {{Supplier}};
+
+(b) bound to engage the {{Supplier}} to supply any goods, services and/or
+    other activities or to enter into any {{Contract}}; or
+
+(c) restricted in any way from engaging any other person to supply any goods,
+    services and/or other activities:
+    
+   (i) of any type, including goods, services and/or other activities that are 
+       the same as or similar to any {{Supplier's Activities}} or 
+       {{ICT Activities}}; or
+
+   (ii) at any location where, or in respect of any project that, the 
+        {{Supplier}} may be required to supply goods, services and/or 
+        other activities.
+
+# No representation {id:noRepresentation}
+
+Clause {{noGuaranteeOfWorkOrExclusivity}} applies even though the 
+{{Contract Authority}} may have provided the {{Supplier}} with a forecast or 
+estimate of the goods, services, {{ICT Activities}} and/or other activities 
+that the {{Contract Authority}} or any {{Eligible Customer}} may require at 
+any time. The {{Supplier}} acknowledges that any forecasts or estimates do 
+not constitute a representation of the goods, services and/or other activities 
+the {{Contract Authority}} or any {{Eligible Customer}} may require in any period.
 ```
 
 ***
