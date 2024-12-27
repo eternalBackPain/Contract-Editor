@@ -1,0 +1,62 @@
+Define "Contract Authority" as {
+    means the relevant authority or agency executing this agreement...
+}
+
+Define "MICTA" as {
+    means the master ICT agreement...
+}
+    
+Define "Supplier" as {
+    means the entity providing goods, services and/or other activities...
+}
+
+Define "Order Proposal" as {
+    means a document proposing specific goods, services and/or other activities...
+}
+
+Define "Contract" as {
+    means any contract formed under or related to this arrangement...
+}
+
+Define "Supplier's Activities" as {
+    means the activities the Supplier undertakes under this agreement...
+}
+
+Define "ICT Activities" as {
+    means any information, communications and technology-related activities...
+}
+
+Define "Eligible Customer" as {
+    means any customer eligible to place orders under this agreement...
+}
+
+# No guarantee of work or exclusivity {
+    The {{Contract Authority}} is not, by executing this {{MICTA}}:
+
+    (a) bound to issue any {{Order Proposal}} to the {{Supplier}};
+
+    (b) bound to engage the {{Supplier}} to supply any goods, services and/or
+        other activities or to enter into any {{Contract}}; or
+
+    (c) restricted in any way from engaging any other person to supply any goods,
+        services and/or other activities:
+        
+        (i) of any type, including goods, services and/or other activities that are 
+            the same as or similar to any {{Supplier's Activities}} or 
+            {{ICT Activities}}; or
+
+        (ii) at any location where, or in respect of any project that, the 
+                {{Supplier}} may be required to supply goods, services and/or 
+                other activities.
+} 
+
+# No representation {
+    Clause {{noGuaranteeOfWorkOrExclusivity}} applies even though the 
+    {{Contract Authority}} may have provided the {{Supplier}} with a forecast or 
+    estimate of the goods, services, {{ICT Activities}} and/or other activities 
+    that the {{Contract Authority}} or any {{Eligible Customer}} may require at 
+    any time. The {{Supplier}} acknowledges that any forecasts or estimates do 
+    not constitute a representation of the goods, services and/or other activities 
+    the {{Contract Authority}} or any {{Eligible Customer}} may require in any period.
+}
+

@@ -25,14 +25,14 @@ export default function Home() {
         body: JSON.stringify({ dsl: value }),
       });
 
-      // 2) Expect a JSON response (not text) since we’re returning JSON on the server
-      const { success, parsedDSL } = await response.json();
+      // 2) Expect a JSON response from the server
+      const { success, data } = await response.json();
       
       // 3) Log the full JSON response from the server
-      console.log("Client: Server response =>", { success, parsedDSL });
+      console.log("Client: Server response =>", { success, data });
 
       // 4) Update preview
-      setParsedDSL(parsedDSL);
+      setParsedDSL(data);
 
     } catch (error) {
       console.error("Error parsing DSL:", error);
