@@ -19,7 +19,7 @@ Define "Contract" as {
 }
 
 Define "Supplier's Activities" as {
-    means the activities the Supplier undertakes under this agreement...
+    means the activities the {{Supplier}} undertakes under this agreement...
 }
 
 Define "ICT Activities" as {
