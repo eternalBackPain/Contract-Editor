@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema 
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="https://www.johnnaoom.com/ContractMarkup"
+    xmlns="https://www.johnnaoom.com/ContractMarkup"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified">
+
+  <!-- 
+    Root element: ContractDocument 
+    This is the parent container for everything in the custom markup language.
+  -->
+  <xsd:element name="ContractDocument">
+    <xsd:complexType>
+      <xsd:sequence>
+        <!-- 
+          The ContractDocument can have multiple Blocks, 
+          plus optional free text segments outside blocks if you desire. 
+        -->
+        <xsd:element name="Block" type="BlockType" minOccurs="0" maxOccurs="unbounded"/>
+        <!-- 
+          If you want to allow free text outside of blocks as well, 
+          you could define it here, e.g., as an element or a mixed content. 
+          For strictness, you could omit free text or create a specific element for it.
+        -->
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+
+  <!-- ====================== BLOCK TYPE ====================== -->
+  <xsd:complexType name="BlockType">
+    <xsd:annotation>
+      <xsd:documentation>
+        A "block" corresponds to @begin{blockName} ... @end{blockName}.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <!-- 
+        A block can contain multiple top-level clauses (#).
+        We allow 0..* because a block might contain free text or definitions only.
+      -->
+      <xsd:element name="Clause" type="ClauseType" minOccurs="0" maxOccurs="unbounded" />
+      <!-- 
+        We also allow "Define" elements (e.g. @define{}) which might appear at any level. 
+        Some lawyers place definitions inline with the block. 
+      -->
+      <xsd:element name="Define" type="DefineType" minOccurs="0" maxOccurs="unbounded"/>
+      <!-- 
+        Optionally, if you want free text in the block that is not part of a Clause or a Define, 
+        you could include an element for it. 
+        Or you can incorporate free text via 'mixed="true"' in Clause content below. 
+      -->
+    </xsd:sequence>
+    <xsd:attribute name="id" type="xsd:string" use="required"/>
+  </xsd:complexType>
+
+
+  <!-- ====================== CLAUSE TYPE (#) ====================== -->
+  <xsd:complexType name="ClauseType" mixed="true">
+    <xsd:annotation>
+      <xsd:documentation>
+        A Clause corresponds to a # heading in the markup. 
+        The <title> or the attribute "title" can store the clause heading text.
+        We allow 'mixed="true"' to embed textual content and references.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <!-- Title of the clause (if desired as a sub-element). 
+           Alternatively, you can store the text in an attribute or in the text content. 
+      -->
+      <xsd:element name="Title" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+      
+      <!-- One or more subclauses (##), each being a SubClauseType. -->
+      <xsd:element name="SubClause" type="SubClauseType" minOccurs="0" maxOccurs="unbounded"/>
+      
+      <!-- Definitions can also appear under a clause if needed. -->
+      <xsd:element name="Define" type="DefineType" minOccurs="0" maxOccurs="unbounded"/>
+      
+      <!-- 
+        If you want an arbitrary number of references inline, 
+        we can define them. However, since 'mixed="true"' is used, 
+        you can embed them in the text (the parser just needs to handle them).
+        For more strictness, you could define an element for references here. 
+      -->
+    </xsd:sequence>
+    
+    <!-- 
+      For referencing this clause with an auto-generated ID like 'noGuaranteeOfWorkOrExclusivity', 
+      we add an optional ID attribute. 
+    -->
+    <xsd:attribute name="id" type="xsd:string" use="optional"/>
+  </xsd:complexType>
+
+
+  <!-- ====================== SUBCLAUSE TYPE (##, ###, etc.) ====================== -->
+  <!-- 
+    A subclause can recursively contain other subclauses, 
+    or eventually become deeply nested. 
+  -->
+  <xsd:complexType name="SubClauseType" mixed="true">
+    <xsd:annotation>
+      <xsd:documentation>
+        A SubClause represents a "##" or "###" or deeper heading. 
+        Also allows nested sub-subclauses. 
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <!-- Title of the subclause (optional) -->
+      <xsd:element name="Title" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+
+      <!-- Possibly nested subclauses (recursively) -->
+      <xsd:element name="SubClause" type="SubClauseType" minOccurs="0" maxOccurs="unbounded"/>
+
+      <!-- Definitions can appear if needed -->
+      <xsd:element name="Define" type="DefineType" minOccurs="0" maxOccurs="unbounded"/>
+      
+      <!-- Could also allow references, etc. -->
+    </xsd:sequence>
+    
+    <!-- 
+      For referencing this subclause (like noGuaranteeOfWorkOrExclusivity(1)), 
+      we can also give it an ID. 
+    -->
+    <xsd:attribute name="id" type="xsd:string" use="optional"/>
+  </xsd:complexType>
+
+
+  <!-- ====================== DEFINE TYPE (@define) ====================== -->
+  <xsd:complexType name="DefineType" mixed="true">
+    <xsd:annotation>
+      <xsd:documentation>
+        Represents the @define command. 
+        The "term" attribute is the name of the defined term (e.g., "Contract Authority").
+        The "hide" attribute is optional (some definitions are hidden from the final doc).
+        The text content inside this element describes the definition of the term. 
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:attribute name="term" type="xsd:string" use="required"/>
+    <xsd:attribute name="hide" type="xsd:boolean" use="optional"/>
+  </xsd:complexType>
+
+
+  <!-- ====================== REFERENCE TYPE ({{...}}) ====================== -->
+  <!-- 
+    If you wish to treat references as their own elements 
+    (e.g., for cross references or definitions used inline),
+    you can define something like <Reference target="..."/> in the XML. 
+  -->
+  <!-- <xsd:complexType name="ReferenceType">
+    <xsd:annotation>
+      <xsd:documentation>
+        Represents a reference in the format {{...}} 
+        "target" can be the ID of a clause or the name of a defined term.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:attribute name="target" type="xsd:string" use="required"/>
+  </xsd:complexType> -->
+
+
+</xsd:schema>
