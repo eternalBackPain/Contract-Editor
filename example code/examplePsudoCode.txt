@@ -1,62 +1,43 @@
-Define "Contract Authority" as {
-    means the relevant authority or agency executing this agreement...
-}
+@begin{GeneralConditions}
 
-Define "MICTA" as {
-    means the master ICT agreement...
-}
-    
-Define "Supplier" as {
-    means the entity providing goods, services and/or other activities...
-}
+# No guarantee of work or exclusivity
 
-Define "Order Proposal" as {
-    means a document proposing specific goods, services and/or other activities...
-}
+The {{Contract Authority}} is not, by executing this {{MICTA}}:
 
-Define "Contract" as {
-    means any contract formed under or related to this arrangement...
-}
+## bound to issue any {{Order Proposal}} to the {{Supplier}};
 
-Define "Supplier's Activities" as {
-    means the activities the {{Supplier}} undertakes under this agreement...
-}
+## bound to engage the {{Supplier}} to supply any goods, services and/or other activities or to enter into any {{Contract}}; or
 
-Define "ICT Activities" as {
-    means any information, communications and technology-related activities...
-}
-
-Define "Eligible Customer" as {
-    means any customer eligible to place orders under this agreement...
-}
-
-# No guarantee of work or exclusivity {
-    The {{Contract Authority}} is not, by executing this {{MICTA}}:
-
-    (a) bound to issue any {{Order Proposal}} to the {{Supplier}};
-
-    (b) bound to engage the {{Supplier}} to supply any goods, services and/or
-        other activities or to enter into any {{Contract}}; or
-
-    (c) restricted in any way from engaging any other person to supply any goods,
-        services and/or other activities:
+## restricted in any way from engaging any other person to supply any goods, services and/or other activities:
         
-        (i) of any type, including goods, services and/or other activities that are 
-            the same as or similar to any {{Supplier's Activities}} or 
-            {{ICT Activities}}; or
+### of any type, including goods, services and/or other activities that are the same as or similar to any {{Supplier's Activities}} or {{ICT               Activities}}; or
 
-        (ii) at any location where, or in respect of any project that, the 
-                {{Supplier}} may be required to supply goods, services and/or 
-                other activities.
-} 
+### at any location where, or in respect of any project that, the {{Supplier}} may be required to supply goods, services and/or other activities.
 
-# No representation {
-    Clause {{noGuaranteeOfWorkOrExclusivity}} applies even though the 
-    {{Contract Authority}} may have provided the {{Supplier}} with a forecast or 
-    estimate of the goods, services, {{ICT Activities}} and/or other activities 
-    that the {{Contract Authority}} or any {{Eligible Customer}} may require at 
-    any time. The {{Supplier}} acknowledges that any forecasts or estimates do 
-    not constitute a representation of the goods, services and/or other activities 
-    the {{Contract Authority}} or any {{Eligible Customer}} may require in any period.
-}
+# No representation
 
+Clause {{noGuaranteeOfWorkOrExclusivity}} applies even though the {{Contract Authority}} may have provided the {{Supplier}} with a forecast or estimate of the goods, services, {{ICT Activities}} and/or other activities that the {{Contract Authority}} or any {{Eligible Customer}} may require at any time. The {{Supplier}} acknowledges that any forecasts or estimates do not constitute a representation of the goods, services and/or other activities the {{Contract Authority}} or any {{Eligible Customer}} may require in any period.
+
+# Definitions and interpretation
+
+## Definitions
+
+In this MICTA capitalised terms have the same meaning as in the ICTA (unless they are assigned a different meaning below) and the following terms have the meaning assigned to them below:
+
+@define{"Contract Authority"} means the relevant authority or agency executing this agreement.} 
+
+@define{"MICTA"} means the master ICT agreement under which this agreement operates.
+
+@define{"Supplier"} means the entity providing goods, services and/or other activities under this agreement.
+
+@define{"Order Proposal"} means a document proposing specific goods, services and/or other activities for approval and execution under this {{MICTA}}.
+
+@define{"Contract"} means any contract formed under or related to this arrangement, including those executed through an {{Order Proposal}}.
+
+@define{"Supplier's Activities"} means the activities the {{Supplier}} undertakes under this agreement, including but not limited to the provision of goods or services.
+
+@define{"ICT Activities"} means any information, communications, and technology-related activities undertaken under this agreement.
+
+@define{"Eligible Customer"} means any customer eligible to place orders under this agreement in accordance with its terms.
+
+@end{GeneralConditions}
