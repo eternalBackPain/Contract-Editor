@@ -1,6 +1,6 @@
 @begin{GeneralConditions}
 
-# No guarantee of work or exclusivity
+#No guarantee of work or exclusivity
 
 The {{Contract Authority}} is not, by executing this {{MICTA}}:
 
