@@ -1,155 +1,42 @@
-grammar ContractMarkup;
+grammar ContractsGrammar;		
 
-/* 
-   ----------------------------
-   PARSER RULES
-   ----------------------------
-*/
+//test easily using http://lab.antlr.org/ 
+//STARTING SIMPLE
+//changing body to INLINE_TEXT for some reason throws an error
 
-/**
- * The document must contain at least one block or outside block text.
- */
-document
-    : ( block
-      | outsideBlockText
-      )+ EOF
+// ----------------- Parser Rules -----------------
+start
+    : block+ EOF
     ;
 
-/**
- * A block must have content (at least one clause, definition, or free text).
- */
 block
-    : BLOCK_BEGIN blockContent BLOCK_END
+    : BEGIN_BLOCK OPEN_BRACE block_name CLOSE_BRACE block_content END_BLOCK OPEN_BRACE block_name CLOSE_BRACE
     ;
 
-/**
- * Block content must include at least one valid element.
- */
-blockContent
-    : ( clause
-      | defineStatement
-      | freeTextStatement
-      | emptyLine
-      )+
+block_content
+    : (new_lines | body)+
+    ; 
+
+body
+    : TEST NEWLINES
     ;
 
-/**
- * Outside block text must include at least one free-text line or empty line.
- */
-outsideBlockText
-    : (freeTextStatement | emptyLine)+
+new_lines
+    : NEWLINES
     ;
 
-/**
- * A clause (like "# Title") followed by zero or more lines belonging to it.
- */
-clause
-    : headingLine clauseContentLine*
+block_name
+    : IDENTIFIER
     ;
 
-/**
- * Heading lines like "# Title" or "## Sub-title".
- */
-headingLine
-    : HEADING
-    ;
+TEST: 'test';
+BEGIN_BLOCK: '@begin';
+END_BLOCK: '@end';
+OPEN_BRACE: '{';
+CLOSE_BRACE: '}';
+HASH: '#';
+WHITESPACE: (' ')+;
+NEWLINES: ('\r'? '\n')+;
+IDENTIFIER: [a-zA-Z0-9_\-' ]+;
+INLINE_TEXT: ~[{}@\r\n]+;
 
-/**
- * Clause content can include sub-headings, definitions, or free-text lines.
- */
-clauseContentLine
-    : defineStatement
-    | subHeading
-    | freeTextStatement
-    | emptyLine
-    ;
-
-/**
- * A sub-heading with optional nested content lines.
- */
-subHeading
-    : HEADING clauseContentLine*
-    ;
-
-/**
- * A define statement like "@define{...}" with optional body text.
- */
-defineStatement
-    : DEFINE_COMMAND defineBody
-    ;
-
-/**
- * The body of a definition can contain one or more free-text lines.
- */
-defineBody
-    : freeTextStatement*
-    ;
-
-/**
- * A free-text line, optionally followed by newlines.
- */
-freeTextStatement
-    : FREE_TEXT (NEWLINE+ | EOF)
-    ;
-
-/**
- * Represents completely blank lines (just newlines).
- */
-emptyLine
-    : NEWLINE+
-    ;
-
-/* 
-   ----------------------------
-   LEXER RULES
-   ----------------------------
-*/
-
-/**
- * Matches @begin{something}.
- */
-BLOCK_BEGIN
-    : '@begin{' ~[}]* '}'
-    ;
-
-/**
- * Matches @end{something}.
- */
-BLOCK_END
-    : '@end{' ~[}]* '}'
-    ;
-
-/**
- * Matches @define{...}.
- */
-DEFINE_COMMAND
-    : '@define{' ~[}]* '}'
-    ;
-
-/**
- * Matches headings (#, ##, ###) with optional text.
- */
-HEADING
-    : '#'+ ~[\r\n]*
-    ;
-
-/**
- * Matches any free-text content that isn't a special token.
- */
-FREE_TEXT
-    : ~[\r\n#@]+ (~[\r\n])*
-    ;
-
-/**
- * Matches one or more newlines.
- */
-NEWLINE
-    : [\r\n]+
-    ;
-
-/**
- * Skips whitespace (spaces, tabs).
- */
-WS
-    : [ \t]+ -> channel(HIDDEN)
-    ;

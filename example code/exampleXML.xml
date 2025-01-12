@@ -1,5 +1,5 @@
-<ContractDocument xmlns="http://example.org/LegalMarkup"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://example.org/LegalMarkup ContractMarkup.xsd">
+<ContractDocument xmlns="http://example.org/ContractMarkup"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://example.org/ContractMarkup ContractMarkup.xsd">
     <Block name="GeneralConditions">
         <Clause id="noGuaranteeOfWorkOrExclusivity">
             <Title>No guarantee of work or exclusivity</Title>
