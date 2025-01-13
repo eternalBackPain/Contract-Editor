@@ -1,8 +1,6 @@
 grammar ContractsGrammar;		
 
 //test easily using http://lab.antlr.org/ 
-//STARTING SIMPLE
-//changing body to INLINE_TEXT for some reason throws an error
 
 // ----------------- Parser Rules -----------------
 start
@@ -14,11 +12,32 @@ block
     ;
 
 block_content
-    : (new_lines | body)+
+    : (heading4
+    | heading3
+    | heading2
+    | heading1
+    | body
+    | new_lines)+
     ; 
 
+heading4
+    : HEADING4
+    ;
+    
+heading3
+    : HEADING3
+    ;
+
+heading2
+    : HEADING2
+    ;
+
+heading1
+    : HEADING1
+    ;
+    
 body
-    : TEST NEWLINES
+    : INLINE_TEXT
     ;
 
 new_lines
@@ -26,17 +45,18 @@ new_lines
     ;
 
 block_name
-    : IDENTIFIER
+    : INLINE_TEXT
     ;
 
-TEST: 'test';
 BEGIN_BLOCK: '@begin';
 END_BLOCK: '@end';
 OPEN_BRACE: '{';
 CLOSE_BRACE: '}';
-HASH: '#';
-WHITESPACE: (' ')+;
+
+HEADING4: '####' ~[\r\n]*;
+HEADING3: '###' ~[\r\n]*;
+HEADING2: '##' ~[\r\n]*;
+HEADING1: '#' ~[\r\n]*;
+INLINE_TEXT: ~[@{}\r\n]+;
 NEWLINES: ('\r'? '\n')+;
-IDENTIFIER: [a-zA-Z0-9_\-' ]+;
-INLINE_TEXT: ~[{}@\r\n]+;
 
