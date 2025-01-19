@@ -7,14 +7,14 @@ import ToolBar from "./components/toolBar";
 import { useState } from "react";
 
 export default function Home() {
-  const [DSLContent, setDSLContent] = useState("");
-  const [parsedDSL, setParsedDSL] = useState("");
+  const [textEditorContent, setTextEditorContent] = useState("");
+  const [parsedTextEditorText, setParsedTextEditorText] = useState("");
 
-  const handleEditorChange = async (value) => {
-    setDSLContent(value);
+  const handleTextEditorChange = async (value) => {
+    setTextEditorContent(value);
     
     // 1) Log the data we’re about to send to the server
-    console.log("Client: Sending DSL to server =>", value);
+    console.log("Client: Sending to server =>", value);
 
     try {
       const response = await fetch("/api/parse", {
@@ -22,7 +22,7 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ dsl: value }),
+        body: JSON.stringify({ text: value }),
       });
 
       // 2) Expect a JSON response from the server
@@ -32,10 +32,10 @@ export default function Home() {
       console.log("Client: Server response =>", { success, data });
 
       // 4) Update preview
-      setParsedDSL(data);
+      setParsedTextEditorText(data);
 
     } catch (error) {
-      console.error("Error parsing DSL:", error);
+      console.error("Error parsing text:", error);
     }
   };
 
@@ -44,8 +44,8 @@ export default function Home() {
       <ToolBar />
       <div className="flex flex-row flex-grow h-full w-full">
         <TableOfContents />
-        <TextEditor handleEditorChange={handleEditorChange} />
-        <LivePreview htmlContent={parsedDSL} />
+        <TextEditor handleEditorChange={handleTextEditorChange} />
+        <LivePreview htmlContent={parsedTextEditorText} />
         <DefinedTerms />
       </div>
     </div>

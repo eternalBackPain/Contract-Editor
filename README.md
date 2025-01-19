@@ -1,10 +1,5 @@
 # Contract-Editor
 
-TODO: start work on building backend 
-1. txt (i.e. the markup language i create) --> JSON
-2. JSON --> PDF / DOCX
-
-
 ## Overview
 
 A code editor for lawyers drafting contracts. This editor will have the lawyer draft contracts in the same manner a software developer would code. It is simply a tool to draft contracts. The code will contain the drafting of a contract along with all the code necessary to format the contract. The human-readable contract will appear adjacent to your code and will live-update with every amendment to your drafting.

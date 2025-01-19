@@ -1,96 +1,69 @@
+import antlr4 from 'antlr4';
+import ContractsLexer from '../../../lib/formal-grammar/ContractsLexer.js';
+import ContractsParser from '../../../lib/formal-grammar/ContractsParser.js';
+import ContractsParserListener from '../../../lib/formal-grammar/ContractsParserListener.js';
+
 export async function POST(request) {
   try {
     // 1) READ INCOMING REQUEST JSON
     const data = await request.json();
-    const { dsl } = data; // "dsl" is a string containing the entire DSL
+    const { text } = data;
 
-    // 2) PARSE DSL
+    // 2) PARSE TEXT
+    const chars = new antlr4.InputStream(text); // Convert input text to ANTLR InputStream
+    const lexer = new ContractsLexer(chars); // Create lexer
+    const tokens = new antlr4.CommonTokenStream(lexer); // Create token stream
+    const parser = new ContractsParser(tokens); // Create parser
+    const tree = parser.start();
 
-    // Split DSL text into lines for parsing
-    const lines = dsl.split(/\r?\n/);
-
-    // Initialize JSON structure
-    const jsonResult = {
-      metadata: {
-        title: "",
-        version: "",
-        createdAt: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
-        author: "", // Fill in dynamically if provided
-      },
-      definitions: [],
-      clauses: [],
-    };
-
-    // 1) Master pattern to grab each block (Definition or Clause) in the order they appear.
-    //    - Captures everything from "Define ... }" OR "# ... }"
-    const blockRegex =
-      /(Define\s+"[^"]+"\s+as\s*{\s*[\s\S]*?\s*})|(#\s+.+?\{\s*[\s\S]*?\s*\})/g;
-    // 2) Sub-patterns to extract pieces from each block
-    const defineBlockPattern =
-      /^Define\s+"([^"]+)"\s+as\s*{\s*([\s\S]*?)\s*}$/m;
-    const clauseBlockPattern = /^#\s+(.+?)\s*\{\s*([\s\S]*?)\s*\}$/m;
-    // 3) Reference pattern for {{references}}
-    const referencePattern = /\{\{([^}]+)\}\}/g;
-
-    const blocks = [...dsl.matchAll(blockRegex)];
-    for (let blockMatch of blocks) {
-      const blockText = blockMatch[0].trim();
-
-      // A) Definition block
-      let defineMatch = blockText.match(defineBlockPattern);
-      if (defineMatch) {
-        const termName = defineMatch[1].trim();
-        const definitionText = defineMatch[2].trim();
-        const references = extractReferences(definitionText);
-
-        jsonResult.definitions.push({
-          termName: termName,
-          definition: definitionText,
-          references,
-        });
-        continue;
+    // 3) SET UP LISTENER
+    class CustomListener extends ContractsParserListener {
+      enterHeading_body(ctx) {
+        console.log("Entering heading body:", ctx.getText());
       }
 
-      // B) Clause block
-      let clauseMatch = blockText.match(clauseBlockPattern);
-      if (clauseMatch) {
-        const title = clauseMatch[1].trim();
-        const clauseBody = clauseMatch[2].trim();
-        const autoId = slugify(title);
-        const references = extractReferences(clauseBody);
+      exitHeading_body(ctx) {
+        console.log("Exiting heading body:", ctx.getText());
+      }
+      
+      enterHeading1(ctx) {
+        console.log("Entering heading1:", ctx.getText());
+      }
 
-        jsonResult.clauses.push({
-          id: autoId,
-          title: title,
-          content: clauseBody,
-          references,
-          subclauses: [],
-        });
+      exitHeading1(ctx) {
+        console.log("Exiting heading1:", ctx.getText());
+      }
+      
+      enterBlock_content(ctx) {
+        console.log("Entering block content:", ctx.getText());
+      }
+
+      exitBlock_content(ctx) {
+        console.log("Exiting block content:", ctx.getText());
+      }
+      
+      enterBlock(ctx) {
+        console.log("Entering block:", ctx.getText());
+      }
+
+      exitBlock(ctx) {
+        console.log("Exiting block:", ctx.getText());
+      }
+
+      enterStart(ctx) {
+        console.log("Entering start rule:", ctx.getText());
+      }
+
+      exitStart(ctx) {
+        console.log("Exiting start rule:", ctx.getText());
       }
     }
 
-    // Helper to extract references (e.g., {{Reference}})
-    function extractReferences(text) {
-      const references = [];
-      let match;
-      while ((match = referencePattern.exec(text)) !== null) {
-        references.push(match[1].trim());
-      }
-      return references;
-    }
+    const listener = new CustomListener();
+    antlr4.tree.ParseTreeWalker.DEFAULT.walk(listener, tree); // Walk the parse tree with the listener
 
-    //slugify function to generate a simple ID from the clause title
-    function slugify(str) {
-      return str
-        .toLowerCase()
-        .replace(/[^\w]+/g, "-") // replace non-alphanumeric with dashes
-        .replace(/-+/g, "-") // collapse multiple dashes
-        .replace(/^-|-$/g, ""); // remove leading/trailing dashes
-    }
-
-    // RETURN DSL JSON RESPONSE
-    return new Response(JSON.stringify({ success: true, data: jsonResult }), {
+    // 4) RETURN RESPONSE
+    return new Response(JSON.stringify({ success: true, data: text }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });

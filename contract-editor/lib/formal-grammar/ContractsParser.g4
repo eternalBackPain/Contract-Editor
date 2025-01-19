@@ -5,6 +5,9 @@ options {
 }
 
 //test easily using http://lab.antlr.org/ 
+//with thanks to https://github.com/mike-lischke/vscode-antlr4/tree/d2a673818518de6cabfd26760ea593b09a8fd096
+
+//TODO: add {{Reference}} and @define 
 
 start
     : (block | new_lines)+ EOF
