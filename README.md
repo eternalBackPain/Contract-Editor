@@ -16,7 +16,7 @@ example code has examples of different components of the project.
 
 ## Mock-up
 
-[Project Mock-up](<Contract Editor project wireframe.pdf>)
+![Project Mock-up](<Contract Editor project wireframe.pdf>)
 
 ## Example parse tree 
 
