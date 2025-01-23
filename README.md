@@ -18,4 +18,14 @@ example code has examples of different components of the project.
 
 [Project Mock-up](<Contract Editor project wireframe.pdf>)
 
+## Example parse tree 
 
+```@begin{GeneralConditions}
+# No guarantee of work or exclusivity
+The Contract Authority is not, by executing this MICTA:
+## bound to issue any Order Proposal to the Supplier;
+## bound to engage the Supplier to supply any goods, services and/or other activities or to enter into any Contract; or
+## restricted in any way from engaging any other person to supply any goods, services and/or other activities:
+### of any type, including goods, services and/or other activities that are the same as or similar to any Supplier's Activities or ICT Activities; or
+### at any location where, or in respect of any project that, the Supplier may be required to supply goods, services and/or other activities.
+@end{GeneralConditions}```

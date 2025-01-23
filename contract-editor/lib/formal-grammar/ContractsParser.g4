@@ -27,19 +27,35 @@ block_content
     ; 
 
 heading4
-    : HEADING4 
+    : heading4_head heading_body?
     ;
     
 heading3
-    : HEADING3 
+    : heading3_head heading_body?
     ;
 
 heading2
-    : HEADING2 heading_body?
+    : heading2_head heading_body?
     ;
 
 heading1
-    : HEADING1 heading_body?
+    : heading1_head heading_body?
+    ;
+
+heading4_head
+    : HEADING4
+    ;
+
+heading3_head
+    : HEADING3
+    ;
+
+heading2_head
+    : HEADING2
+    ;
+
+heading1_head
+    : HEADING1
     ;
 
 heading_body
