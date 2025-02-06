@@ -2,33 +2,29 @@
 // jshint ignore: start
 import antlr4 from 'antlr4';
 import ContractsParserListener from './ContractsParserListener.js';
-const serializedATN = [4,1,15,95,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,
-2,5,7,5,2,6,7,6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,
-13,7,13,2,14,7,14,1,0,1,0,4,0,33,8,0,11,0,12,0,34,1,0,1,0,1,1,1,1,1,1,1,
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,2,1,2,1,2,1,2,1,2,4,2,55,8,2,11,2,12,2,56,
-1,3,1,3,3,3,61,8,3,1,4,1,4,3,4,65,8,4,1,5,1,5,3,5,69,8,5,1,6,1,6,3,6,73,
-8,6,1,7,1,7,1,8,1,8,1,9,1,9,1,10,1,10,1,11,1,11,4,11,85,8,11,11,11,12,11,
-86,1,12,1,12,1,13,1,13,1,14,1,14,1,14,0,0,15,0,2,4,6,8,10,12,14,16,18,20,
-22,24,26,28,0,0,93,0,32,1,0,0,0,2,38,1,0,0,0,4,54,1,0,0,0,6,58,1,0,0,0,8,
-62,1,0,0,0,10,66,1,0,0,0,12,70,1,0,0,0,14,74,1,0,0,0,16,76,1,0,0,0,18,78,
-1,0,0,0,20,80,1,0,0,0,22,84,1,0,0,0,24,88,1,0,0,0,26,90,1,0,0,0,28,92,1,
-0,0,0,30,33,3,2,1,0,31,33,3,28,14,0,32,30,1,0,0,0,32,31,1,0,0,0,33,34,1,
-0,0,0,34,32,1,0,0,0,34,35,1,0,0,0,35,36,1,0,0,0,36,37,5,0,0,1,37,1,1,0,0,
-0,38,39,5,1,0,0,39,40,5,3,0,0,40,41,3,24,12,0,41,42,5,15,0,0,42,43,3,4,2,
-0,43,44,5,2,0,0,44,45,5,3,0,0,45,46,3,24,12,0,46,47,5,15,0,0,47,3,1,0,0,
-0,48,55,3,12,6,0,49,55,3,10,5,0,50,55,3,8,4,0,51,55,3,6,3,0,52,55,3,26,13,
-0,53,55,3,28,14,0,54,48,1,0,0,0,54,49,1,0,0,0,54,50,1,0,0,0,54,51,1,0,0,
-0,54,52,1,0,0,0,54,53,1,0,0,0,55,56,1,0,0,0,56,54,1,0,0,0,56,57,1,0,0,0,
-57,5,1,0,0,0,58,60,3,14,7,0,59,61,3,22,11,0,60,59,1,0,0,0,60,61,1,0,0,0,
-61,7,1,0,0,0,62,64,3,16,8,0,63,65,3,22,11,0,64,63,1,0,0,0,64,65,1,0,0,0,
-65,9,1,0,0,0,66,68,3,18,9,0,67,69,3,22,11,0,68,67,1,0,0,0,68,69,1,0,0,0,
-69,11,1,0,0,0,70,72,3,20,10,0,71,73,3,22,11,0,72,71,1,0,0,0,72,73,1,0,0,
-0,73,13,1,0,0,0,74,75,5,8,0,0,75,15,1,0,0,0,76,77,5,9,0,0,77,17,1,0,0,0,
-78,79,5,10,0,0,79,19,1,0,0,0,80,81,5,11,0,0,81,21,1,0,0,0,82,85,3,26,13,
-0,83,85,3,28,14,0,84,82,1,0,0,0,84,83,1,0,0,0,85,86,1,0,0,0,86,84,1,0,0,
-0,86,87,1,0,0,0,87,23,1,0,0,0,88,89,5,14,0,0,89,25,1,0,0,0,90,91,5,12,0,
-0,91,27,1,0,0,0,92,93,5,13,0,0,93,29,1,0,0,0,10,32,34,54,56,60,64,68,72,
-84,86];
+const serializedATN = [4,1,15,79,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,
+2,5,7,5,2,6,7,6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,1,0,1,0,4,0,25,8,0,11,
+0,12,0,26,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,2,1,2,1,
+2,1,2,1,2,4,2,47,8,2,11,2,12,2,48,1,3,1,3,3,3,53,8,3,1,4,1,4,3,4,57,8,4,
+1,5,1,5,3,5,61,8,5,1,6,1,6,3,6,65,8,6,1,7,1,7,4,7,69,8,7,11,7,12,7,70,1,
+8,1,8,1,9,1,9,1,10,1,10,1,10,0,0,11,0,2,4,6,8,10,12,14,16,18,20,0,0,81,0,
+24,1,0,0,0,2,30,1,0,0,0,4,46,1,0,0,0,6,50,1,0,0,0,8,54,1,0,0,0,10,58,1,0,
+0,0,12,62,1,0,0,0,14,68,1,0,0,0,16,72,1,0,0,0,18,74,1,0,0,0,20,76,1,0,0,
+0,22,25,3,2,1,0,23,25,3,20,10,0,24,22,1,0,0,0,24,23,1,0,0,0,25,26,1,0,0,
+0,26,24,1,0,0,0,26,27,1,0,0,0,27,28,1,0,0,0,28,29,5,0,0,1,29,1,1,0,0,0,30,
+31,5,1,0,0,31,32,5,3,0,0,32,33,3,16,8,0,33,34,5,15,0,0,34,35,3,4,2,0,35,
+36,5,2,0,0,36,37,5,3,0,0,37,38,3,16,8,0,38,39,5,15,0,0,39,3,1,0,0,0,40,47,
+3,12,6,0,41,47,3,10,5,0,42,47,3,8,4,0,43,47,3,6,3,0,44,47,3,18,9,0,45,47,
+3,20,10,0,46,40,1,0,0,0,46,41,1,0,0,0,46,42,1,0,0,0,46,43,1,0,0,0,46,44,
+1,0,0,0,46,45,1,0,0,0,47,48,1,0,0,0,48,46,1,0,0,0,48,49,1,0,0,0,49,5,1,0,
+0,0,50,52,5,8,0,0,51,53,3,14,7,0,52,51,1,0,0,0,52,53,1,0,0,0,53,7,1,0,0,
+0,54,56,5,9,0,0,55,57,3,14,7,0,56,55,1,0,0,0,56,57,1,0,0,0,57,9,1,0,0,0,
+58,60,5,10,0,0,59,61,3,14,7,0,60,59,1,0,0,0,60,61,1,0,0,0,61,11,1,0,0,0,
+62,64,5,11,0,0,63,65,3,14,7,0,64,63,1,0,0,0,64,65,1,0,0,0,65,13,1,0,0,0,
+66,69,3,18,9,0,67,69,3,20,10,0,68,66,1,0,0,0,68,67,1,0,0,0,69,70,1,0,0,0,
+70,68,1,0,0,0,70,71,1,0,0,0,71,15,1,0,0,0,72,73,5,14,0,0,73,17,1,0,0,0,74,
+75,5,12,0,0,75,19,1,0,0,0,76,77,5,13,0,0,77,21,1,0,0,0,10,24,26,46,48,52,
+56,60,64,68,70];
 
 
 const atn = new antlr4.atn.ATNDeserializer().deserialize(serializedATN);
@@ -48,9 +44,8 @@ export default class ContractsParser extends antlr4.Parser {
                              "HEADING3", "HEADING2", "HEADING1", "BODY_TEXT", 
                              "NEWLINES", "IDENTIFIER_TEXT", "CLOSE_BRACE" ];
     static ruleNames = [ "start", "block", "block_content", "heading4", 
-                         "heading3", "heading2", "heading1", "heading4_head", 
-                         "heading3_head", "heading2_head", "heading1_head", 
-                         "heading_body", "block_name", "body", "new_lines" ];
+                         "heading3", "heading2", "heading1", "heading_body", 
+                         "block_name", "body", "new_lines" ];
 
     constructor(input) {
         super(input);
@@ -68,29 +63,29 @@ export default class ContractsParser extends antlr4.Parser {
 	    var _la = 0;
 	    try {
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 32; 
+	        this.state = 24; 
 	        this._errHandler.sync(this);
 	        _la = this._input.LA(1);
 	        do {
-	            this.state = 32;
+	            this.state = 24;
 	            this._errHandler.sync(this);
 	            switch(this._input.LA(1)) {
 	            case 1:
-	                this.state = 30;
+	                this.state = 22;
 	                this.block();
 	                break;
 	            case 13:
-	                this.state = 31;
+	                this.state = 23;
 	                this.new_lines();
 	                break;
 	            default:
 	                throw new antlr4.error.NoViableAltException(this);
 	            }
-	            this.state = 34; 
+	            this.state = 26; 
 	            this._errHandler.sync(this);
 	            _la = this._input.LA(1);
 	        } while(_la===1 || _la===13);
-	        this.state = 36;
+	        this.state = 28;
 	        this.match(ContractsParser.EOF);
 	    } catch (re) {
 	    	if(re instanceof antlr4.error.RecognitionException) {
@@ -113,23 +108,23 @@ export default class ContractsParser extends antlr4.Parser {
 	    this.enterRule(localctx, 2, ContractsParser.RULE_block);
 	    try {
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 38;
+	        this.state = 30;
 	        this.match(ContractsParser.BEGIN_BLOCK);
-	        this.state = 39;
+	        this.state = 31;
 	        this.match(ContractsParser.OPEN_BRACE);
-	        this.state = 40;
+	        this.state = 32;
 	        this.block_name();
-	        this.state = 41;
+	        this.state = 33;
 	        this.match(ContractsParser.CLOSE_BRACE);
-	        this.state = 42;
+	        this.state = 34;
 	        this.block_content();
-	        this.state = 43;
+	        this.state = 35;
 	        this.match(ContractsParser.END_BLOCK);
-	        this.state = 44;
+	        this.state = 36;
 	        this.match(ContractsParser.OPEN_BRACE);
-	        this.state = 45;
+	        this.state = 37;
 	        this.block_name();
-	        this.state = 46;
+	        this.state = 38;
 	        this.match(ContractsParser.CLOSE_BRACE);
 	    } catch (re) {
 	    	if(re instanceof antlr4.error.RecognitionException) {
@@ -153,41 +148,41 @@ export default class ContractsParser extends antlr4.Parser {
 	    var _la = 0;
 	    try {
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 54; 
+	        this.state = 46; 
 	        this._errHandler.sync(this);
 	        _la = this._input.LA(1);
 	        do {
-	            this.state = 54;
+	            this.state = 46;
 	            this._errHandler.sync(this);
 	            switch(this._input.LA(1)) {
 	            case 11:
-	                this.state = 48;
+	                this.state = 40;
 	                this.heading1();
 	                break;
 	            case 10:
-	                this.state = 49;
+	                this.state = 41;
 	                this.heading2();
 	                break;
 	            case 9:
-	                this.state = 50;
+	                this.state = 42;
 	                this.heading3();
 	                break;
 	            case 8:
-	                this.state = 51;
+	                this.state = 43;
 	                this.heading4();
 	                break;
 	            case 12:
-	                this.state = 52;
+	                this.state = 44;
 	                this.body();
 	                break;
 	            case 13:
-	                this.state = 53;
+	                this.state = 45;
 	                this.new_lines();
 	                break;
 	            default:
 	                throw new antlr4.error.NoViableAltException(this);
 	            }
-	            this.state = 56; 
+	            this.state = 48; 
 	            this._errHandler.sync(this);
 	            _la = this._input.LA(1);
 	        } while((((_la) & ~0x1f) === 0 && ((1 << _la) & 16128) !== 0));
@@ -212,13 +207,13 @@ export default class ContractsParser extends antlr4.Parser {
 	    this.enterRule(localctx, 6, ContractsParser.RULE_heading4);
 	    try {
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 58;
-	        this.heading4_head();
-	        this.state = 60;
+	        this.state = 50;
+	        this.match(ContractsParser.HEADING4);
+	        this.state = 52;
 	        this._errHandler.sync(this);
 	        var la_ = this._interp.adaptivePredict(this._input,4,this._ctx);
 	        if(la_===1) {
-	            this.state = 59;
+	            this.state = 51;
 	            this.heading_body();
 
 	        }
@@ -243,13 +238,13 @@ export default class ContractsParser extends antlr4.Parser {
 	    this.enterRule(localctx, 8, ContractsParser.RULE_heading3);
 	    try {
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 62;
-	        this.heading3_head();
-	        this.state = 64;
+	        this.state = 54;
+	        this.match(ContractsParser.HEADING3);
+	        this.state = 56;
 	        this._errHandler.sync(this);
 	        var la_ = this._interp.adaptivePredict(this._input,5,this._ctx);
 	        if(la_===1) {
-	            this.state = 63;
+	            this.state = 55;
 	            this.heading_body();
 
 	        }
@@ -274,13 +269,13 @@ export default class ContractsParser extends antlr4.Parser {
 	    this.enterRule(localctx, 10, ContractsParser.RULE_heading2);
 	    try {
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 66;
-	        this.heading2_head();
-	        this.state = 68;
+	        this.state = 58;
+	        this.match(ContractsParser.HEADING2);
+	        this.state = 60;
 	        this._errHandler.sync(this);
 	        var la_ = this._interp.adaptivePredict(this._input,6,this._ctx);
 	        if(la_===1) {
-	            this.state = 67;
+	            this.state = 59;
 	            this.heading_body();
 
 	        }
@@ -305,13 +300,13 @@ export default class ContractsParser extends antlr4.Parser {
 	    this.enterRule(localctx, 12, ContractsParser.RULE_heading1);
 	    try {
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 70;
-	        this.heading1_head();
-	        this.state = 72;
+	        this.state = 62;
+	        this.match(ContractsParser.HEADING1);
+	        this.state = 64;
 	        this._errHandler.sync(this);
 	        var la_ = this._interp.adaptivePredict(this._input,7,this._ctx);
 	        if(la_===1) {
-	            this.state = 71;
+	            this.state = 63;
 	            this.heading_body();
 
 	        }
@@ -331,118 +326,26 @@ export default class ContractsParser extends antlr4.Parser {
 
 
 
-	heading4_head() {
-	    let localctx = new Heading4_headContext(this, this._ctx, this.state);
-	    this.enterRule(localctx, 14, ContractsParser.RULE_heading4_head);
-	    try {
-	        this.enterOuterAlt(localctx, 1);
-	        this.state = 74;
-	        this.match(ContractsParser.HEADING4);
-	    } catch (re) {
-	    	if(re instanceof antlr4.error.RecognitionException) {
-		        localctx.exception = re;
-		        this._errHandler.reportError(this, re);
-		        this._errHandler.recover(this, re);
-		    } else {
-		    	throw re;
-		    }
-	    } finally {
-	        this.exitRule();
-	    }
-	    return localctx;
-	}
-
-
-
-	heading3_head() {
-	    let localctx = new Heading3_headContext(this, this._ctx, this.state);
-	    this.enterRule(localctx, 16, ContractsParser.RULE_heading3_head);
-	    try {
-	        this.enterOuterAlt(localctx, 1);
-	        this.state = 76;
-	        this.match(ContractsParser.HEADING3);
-	    } catch (re) {
-	    	if(re instanceof antlr4.error.RecognitionException) {
-		        localctx.exception = re;
-		        this._errHandler.reportError(this, re);
-		        this._errHandler.recover(this, re);
-		    } else {
-		    	throw re;
-		    }
-	    } finally {
-	        this.exitRule();
-	    }
-	    return localctx;
-	}
-
-
-
-	heading2_head() {
-	    let localctx = new Heading2_headContext(this, this._ctx, this.state);
-	    this.enterRule(localctx, 18, ContractsParser.RULE_heading2_head);
-	    try {
-	        this.enterOuterAlt(localctx, 1);
-	        this.state = 78;
-	        this.match(ContractsParser.HEADING2);
-	    } catch (re) {
-	    	if(re instanceof antlr4.error.RecognitionException) {
-		        localctx.exception = re;
-		        this._errHandler.reportError(this, re);
-		        this._errHandler.recover(this, re);
-		    } else {
-		    	throw re;
-		    }
-	    } finally {
-	        this.exitRule();
-	    }
-	    return localctx;
-	}
-
-
-
-	heading1_head() {
-	    let localctx = new Heading1_headContext(this, this._ctx, this.state);
-	    this.enterRule(localctx, 20, ContractsParser.RULE_heading1_head);
-	    try {
-	        this.enterOuterAlt(localctx, 1);
-	        this.state = 80;
-	        this.match(ContractsParser.HEADING1);
-	    } catch (re) {
-	    	if(re instanceof antlr4.error.RecognitionException) {
-		        localctx.exception = re;
-		        this._errHandler.reportError(this, re);
-		        this._errHandler.recover(this, re);
-		    } else {
-		    	throw re;
-		    }
-	    } finally {
-	        this.exitRule();
-	    }
-	    return localctx;
-	}
-
-
-
 	heading_body() {
 	    let localctx = new Heading_bodyContext(this, this._ctx, this.state);
-	    this.enterRule(localctx, 22, ContractsParser.RULE_heading_body);
+	    this.enterRule(localctx, 14, ContractsParser.RULE_heading_body);
 	    try {
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 84; 
+	        this.state = 68; 
 	        this._errHandler.sync(this);
 	        var _alt = 1;
 	        do {
 	        	switch (_alt) {
 	        	case 1:
-	        		this.state = 84;
+	        		this.state = 68;
 	        		this._errHandler.sync(this);
 	        		switch(this._input.LA(1)) {
 	        		case 12:
-	        		    this.state = 82;
+	        		    this.state = 66;
 	        		    this.body();
 	        		    break;
 	        		case 13:
-	        		    this.state = 83;
+	        		    this.state = 67;
 	        		    this.new_lines();
 	        		    break;
 	        		default:
@@ -452,7 +355,7 @@ export default class ContractsParser extends antlr4.Parser {
 	        	default:
 	        		throw new antlr4.error.NoViableAltException(this);
 	        	}
-	        	this.state = 86; 
+	        	this.state = 70; 
 	        	this._errHandler.sync(this);
 	        	_alt = this._interp.adaptivePredict(this._input,9, this._ctx);
 	        } while ( _alt!=2 && _alt!=antlr4.atn.ATN.INVALID_ALT_NUMBER );
@@ -474,10 +377,10 @@ export default class ContractsParser extends antlr4.Parser {
 
 	block_name() {
 	    let localctx = new Block_nameContext(this, this._ctx, this.state);
-	    this.enterRule(localctx, 24, ContractsParser.RULE_block_name);
+	    this.enterRule(localctx, 16, ContractsParser.RULE_block_name);
 	    try {
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 88;
+	        this.state = 72;
 	        this.match(ContractsParser.IDENTIFIER_TEXT);
 	    } catch (re) {
 	    	if(re instanceof antlr4.error.RecognitionException) {
@@ -497,10 +400,10 @@ export default class ContractsParser extends antlr4.Parser {
 
 	body() {
 	    let localctx = new BodyContext(this, this._ctx, this.state);
-	    this.enterRule(localctx, 26, ContractsParser.RULE_body);
+	    this.enterRule(localctx, 18, ContractsParser.RULE_body);
 	    try {
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 90;
+	        this.state = 74;
 	        this.match(ContractsParser.BODY_TEXT);
 	    } catch (re) {
 	    	if(re instanceof antlr4.error.RecognitionException) {
@@ -520,10 +423,10 @@ export default class ContractsParser extends antlr4.Parser {
 
 	new_lines() {
 	    let localctx = new New_linesContext(this, this._ctx, this.state);
-	    this.enterRule(localctx, 28, ContractsParser.RULE_new_lines);
+	    this.enterRule(localctx, 20, ContractsParser.RULE_new_lines);
 	    try {
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 92;
+	        this.state = 76;
 	        this.match(ContractsParser.NEWLINES);
 	    } catch (re) {
 	    	if(re instanceof antlr4.error.RecognitionException) {
@@ -566,14 +469,10 @@ ContractsParser.RULE_heading4 = 3;
 ContractsParser.RULE_heading3 = 4;
 ContractsParser.RULE_heading2 = 5;
 ContractsParser.RULE_heading1 = 6;
-ContractsParser.RULE_heading4_head = 7;
-ContractsParser.RULE_heading3_head = 8;
-ContractsParser.RULE_heading2_head = 9;
-ContractsParser.RULE_heading1_head = 10;
-ContractsParser.RULE_heading_body = 11;
-ContractsParser.RULE_block_name = 12;
-ContractsParser.RULE_body = 13;
-ContractsParser.RULE_new_lines = 14;
+ContractsParser.RULE_heading_body = 7;
+ContractsParser.RULE_block_name = 8;
+ContractsParser.RULE_body = 9;
+ContractsParser.RULE_new_lines = 10;
 
 class StartContext extends antlr4.ParserRuleContext {
 
@@ -821,8 +720,8 @@ class Heading4Context extends antlr4.ParserRuleContext {
         this.ruleIndex = ContractsParser.RULE_heading4;
     }
 
-	heading4_head() {
-	    return this.getTypedRuleContext(Heading4_headContext,0);
+	HEADING4() {
+	    return this.getToken(ContractsParser.HEADING4, 0);
 	};
 
 	heading_body() {
@@ -860,8 +759,8 @@ class Heading3Context extends antlr4.ParserRuleContext {
         this.ruleIndex = ContractsParser.RULE_heading3;
     }
 
-	heading3_head() {
-	    return this.getTypedRuleContext(Heading3_headContext,0);
+	HEADING3() {
+	    return this.getToken(ContractsParser.HEADING3, 0);
 	};
 
 	heading_body() {
@@ -899,8 +798,8 @@ class Heading2Context extends antlr4.ParserRuleContext {
         this.ruleIndex = ContractsParser.RULE_heading2;
     }
 
-	heading2_head() {
-	    return this.getTypedRuleContext(Heading2_headContext,0);
+	HEADING2() {
+	    return this.getToken(ContractsParser.HEADING2, 0);
 	};
 
 	heading_body() {
@@ -938,8 +837,8 @@ class Heading1Context extends antlr4.ParserRuleContext {
         this.ruleIndex = ContractsParser.RULE_heading1;
     }
 
-	heading1_head() {
-	    return this.getTypedRuleContext(Heading1_headContext,0);
+	HEADING1() {
+	    return this.getToken(ContractsParser.HEADING1, 0);
 	};
 
 	heading_body() {
@@ -955,146 +854,6 @@ class Heading1Context extends antlr4.ParserRuleContext {
 	exitRule(listener) {
 	    if(listener instanceof ContractsParserListener ) {
 	        listener.exitHeading1(this);
-		}
-	}
-
-
-}
-
-
-
-class Heading4_headContext extends antlr4.ParserRuleContext {
-
-    constructor(parser, parent, invokingState) {
-        if(parent===undefined) {
-            parent = null;
-        }
-        if(invokingState===undefined || invokingState===null) {
-            invokingState = -1;
-        }
-        super(parent, invokingState);
-        this.parser = parser;
-        this.ruleIndex = ContractsParser.RULE_heading4_head;
-    }
-
-	HEADING4() {
-	    return this.getToken(ContractsParser.HEADING4, 0);
-	};
-
-	enterRule(listener) {
-	    if(listener instanceof ContractsParserListener ) {
-	        listener.enterHeading4_head(this);
-		}
-	}
-
-	exitRule(listener) {
-	    if(listener instanceof ContractsParserListener ) {
-	        listener.exitHeading4_head(this);
-		}
-	}
-
-
-}
-
-
-
-class Heading3_headContext extends antlr4.ParserRuleContext {
-
-    constructor(parser, parent, invokingState) {
-        if(parent===undefined) {
-            parent = null;
-        }
-        if(invokingState===undefined || invokingState===null) {
-            invokingState = -1;
-        }
-        super(parent, invokingState);
-        this.parser = parser;
-        this.ruleIndex = ContractsParser.RULE_heading3_head;
-    }
-
-	HEADING3() {
-	    return this.getToken(ContractsParser.HEADING3, 0);
-	};
-
-	enterRule(listener) {
-	    if(listener instanceof ContractsParserListener ) {
-	        listener.enterHeading3_head(this);
-		}
-	}
-
-	exitRule(listener) {
-	    if(listener instanceof ContractsParserListener ) {
-	        listener.exitHeading3_head(this);
-		}
-	}
-
-
-}
-
-
-
-class Heading2_headContext extends antlr4.ParserRuleContext {
-
-    constructor(parser, parent, invokingState) {
-        if(parent===undefined) {
-            parent = null;
-        }
-        if(invokingState===undefined || invokingState===null) {
-            invokingState = -1;
-        }
-        super(parent, invokingState);
-        this.parser = parser;
-        this.ruleIndex = ContractsParser.RULE_heading2_head;
-    }
-
-	HEADING2() {
-	    return this.getToken(ContractsParser.HEADING2, 0);
-	};
-
-	enterRule(listener) {
-	    if(listener instanceof ContractsParserListener ) {
-	        listener.enterHeading2_head(this);
-		}
-	}
-
-	exitRule(listener) {
-	    if(listener instanceof ContractsParserListener ) {
-	        listener.exitHeading2_head(this);
-		}
-	}
-
-
-}
-
-
-
-class Heading1_headContext extends antlr4.ParserRuleContext {
-
-    constructor(parser, parent, invokingState) {
-        if(parent===undefined) {
-            parent = null;
-        }
-        if(invokingState===undefined || invokingState===null) {
-            invokingState = -1;
-        }
-        super(parent, invokingState);
-        this.parser = parser;
-        this.ruleIndex = ContractsParser.RULE_heading1_head;
-    }
-
-	HEADING1() {
-	    return this.getToken(ContractsParser.HEADING1, 0);
-	};
-
-	enterRule(listener) {
-	    if(listener instanceof ContractsParserListener ) {
-	        listener.enterHeading1_head(this);
-		}
-	}
-
-	exitRule(listener) {
-	    if(listener instanceof ContractsParserListener ) {
-	        listener.exitHeading1_head(this);
 		}
 	}
 
@@ -1269,10 +1028,6 @@ ContractsParser.Heading4Context = Heading4Context;
 ContractsParser.Heading3Context = Heading3Context; 
 ContractsParser.Heading2Context = Heading2Context; 
 ContractsParser.Heading1Context = Heading1Context; 
-ContractsParser.Heading4_headContext = Heading4_headContext; 
-ContractsParser.Heading3_headContext = Heading3_headContext; 
-ContractsParser.Heading2_headContext = Heading2_headContext; 
-ContractsParser.Heading1_headContext = Heading1_headContext; 
 ContractsParser.Heading_bodyContext = Heading_bodyContext; 
 ContractsParser.Block_nameContext = Block_nameContext; 
 ContractsParser.BodyContext = BodyContext; 

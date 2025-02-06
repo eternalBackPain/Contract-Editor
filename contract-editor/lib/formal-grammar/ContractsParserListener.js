@@ -68,42 +68,6 @@ export default class ContractsParserListener extends antlr4.tree.ParseTreeListen
 	}
 
 
-	// Enter a parse tree produced by ContractsParser#heading4_head.
-	enterHeading4_head(ctx) {
-	}
-
-	// Exit a parse tree produced by ContractsParser#heading4_head.
-	exitHeading4_head(ctx) {
-	}
-
-
-	// Enter a parse tree produced by ContractsParser#heading3_head.
-	enterHeading3_head(ctx) {
-	}
-
-	// Exit a parse tree produced by ContractsParser#heading3_head.
-	exitHeading3_head(ctx) {
-	}
-
-
-	// Enter a parse tree produced by ContractsParser#heading2_head.
-	enterHeading2_head(ctx) {
-	}
-
-	// Exit a parse tree produced by ContractsParser#heading2_head.
-	exitHeading2_head(ctx) {
-	}
-
-
-	// Enter a parse tree produced by ContractsParser#heading1_head.
-	enterHeading1_head(ctx) {
-	}
-
-	// Exit a parse tree produced by ContractsParser#heading1_head.
-	exitHeading1_head(ctx) {
-	}
-
-
 	// Enter a parse tree produced by ContractsParser#heading_body.
 	enterHeading_body(ctx) {
 	}

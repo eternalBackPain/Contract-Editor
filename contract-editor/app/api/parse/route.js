@@ -1,7 +1,7 @@
-import antlr4 from 'antlr4';
-import ContractsLexer from '../../../lib/formal-grammar/ContractsLexer.js';
-import ContractsParser from '../../../lib/formal-grammar/ContractsParser.js';
-import ContractsParserListener from '../../../lib/formal-grammar/ContractsParserListener.js';
+import antlr4 from "antlr4";
+import ContractsLexer from "../../../lib/formal-grammar/ContractsLexer.js";
+import ContractsParser from "../../../lib/formal-grammar/ContractsParser.js";
+import ContractsParserListener from "../../../lib/formal-grammar/ContractsParserListener.js";
 
 export async function POST(request) {
   try {
@@ -18,52 +18,73 @@ export async function POST(request) {
 
     // 3) SET UP LISTENER
     class CustomListener extends ContractsParserListener {
+      constructor() {
+        super();
+        this.HTMLOutput = [];
+      }
+
+      enterStart(ctx) {}
+      exitStart(ctx) {}
+      enterBlock(ctx) {}
+      exitBlock(ctx) {}
+      enterBlock_content(ctx) {}
+      exitBlock_content(ctx) {}
+
+      enterHeading4(ctx) {
+        const heading = ctx.getChild(0).getText();
+        this.HTMLOutput.push("<h4>" + heading.substring(4) + "</h4>");
+      }
+
+      exitHeading4(ctx) {}
+
+      enterHeading3(ctx) {
+        const heading = ctx.getChild(0).getText();
+        this.HTMLOutput.push("<h3>" + heading.substring(3) + "</h3>");
+      }
+
+      exitHeading3(ctx) {}
+
+      enterHeading2(ctx) {
+        const heading = ctx.getChild(0).getText();
+        this.HTMLOutput.push("<h2>" + heading.substring(2) + "</h2>");
+      }
+
+      exitHeading2(ctx) {}
+
+      enterHeading1(ctx) {
+        const heading = ctx.getChild(0).getText();
+        this.HTMLOutput.push("<h1>" + heading.substring(1) + "</h1>");
+      }
+
+      exitHeading1(ctx) {}
+
       enterHeading_body(ctx) {
-        console.log("Entering heading body:", ctx.getText());
+        this.HTMLOutput.push("<p>");
       }
 
       exitHeading_body(ctx) {
-        console.log("Exiting heading body:", ctx.getText());
-      }
-      
-      enterHeading1(ctx) {
-        console.log("Entering heading1:", ctx.getText());
+        this.HTMLOutput.push(ctx.getText() + "</p>");
       }
 
-      exitHeading1(ctx) {
-        console.log("Exiting heading1:", ctx.getText());
-      }
-      
-      enterBlock_content(ctx) {
-        console.log("Entering block content:", ctx.getText());
-      }
+      enterBlock_name(ctx) {}
 
-      exitBlock_content(ctx) {
-        console.log("Exiting block content:", ctx.getText());
-      }
-      
-      enterBlock(ctx) {
-        console.log("Entering block:", ctx.getText());
-      }
+      exitBlock_name(ctx) {}
 
-      exitBlock(ctx) {
-        console.log("Exiting block:", ctx.getText());
-      }
+      enterBody(ctx) {}
 
-      enterStart(ctx) {
-        console.log("Entering start rule:", ctx.getText());
-      }
+      exitBody(ctx) {}
 
-      exitStart(ctx) {
-        console.log("Exiting start rule:", ctx.getText());
-      }
+      enterNew_lines(ctx) {}
+
+      exitNew_lines(ctx) {}
     }
 
-    const listener = new CustomListener();
+    const listener = new CustomListener(); // instantiate new listener class
     antlr4.tree.ParseTreeWalker.DEFAULT.walk(listener, tree); // Walk the parse tree with the listener
+    const html = listener.HTMLOutput.join(""); // Join the array of HTML strings into a single string
 
     // 4) RETURN RESPONSE
-    return new Response(JSON.stringify({ success: true, data: text }), {
+    return new Response(JSON.stringify({ success: true, data: html }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
