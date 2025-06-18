@@ -16,6 +16,14 @@ export async function POST(request) {
     const parser = new ContractsParser(tokens); // Create parser
     const tree = parser.start();
 
+    // 2A) ESCAPE <, >, AND & CHARACTERS (havent used this yet, but might be useful later)
+    function escapeXML(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
     // 3) SET UP LISTENER
     class CustomListener extends ContractsParserListener {
       constructor() {
@@ -32,14 +40,14 @@ export async function POST(request) {
       exitBlock(ctx) {
         this.XMLOutput.push("</Block>");
       }
-      
+
       enterBlock_content(ctx) {}
       exitBlock_content(ctx) {}
 
       enterHeading4(ctx) {
         const heading = ctx.getChild(0).getText();
         this.XMLOutput.push(
-          "<HeadingLevel4>" + heading.substring(4) + "</HeadingLevel4>"
+          "<HeadingLevel4>" + heading.substring(5) + "</HeadingLevel4>"
         );
       }
       exitHeading4(ctx) {}
@@ -47,7 +55,7 @@ export async function POST(request) {
       enterHeading3(ctx) {
         const heading = ctx.getChild(0).getText();
         this.XMLOutput.push(
-          "<HeadingLevel3>" + heading.substring(3) + "</HeadingLevel3>"
+          "<HeadingLevel3>" + heading.substring(4) + "</HeadingLevel3>"
         );
       }
       exitHeading3(ctx) {}
@@ -55,7 +63,7 @@ export async function POST(request) {
       enterHeading2(ctx) {
         const heading = ctx.getChild(0).getText();
         this.XMLOutput.push(
-          "<HeadingLevel2>" + heading.substring(2) + "</HeadingLevel2>"
+          "<HeadingLevel2>" + heading.substring(3) + "</HeadingLevel2>"
         );
       }
       exitHeading2(ctx) {}
@@ -63,7 +71,7 @@ export async function POST(request) {
       enterHeading1(ctx) {
         const heading = ctx.getChild(0).getText();
         this.XMLOutput.push(
-          "<HeadingLevel1>" + heading.substring(1) + "</HeadingLevel1>"
+          "<HeadingLevel1>" + heading.substring(2) + "</HeadingLevel1>"
         );
       }
       exitHeading1(ctx) {}
@@ -86,8 +94,11 @@ export async function POST(request) {
 
     const listener = new CustomListener(); // instantiate new listener class
     antlr4.tree.ParseTreeWalker.DEFAULT.walk(listener, tree); // Walk the parse tree with the listener
-    const xmlContent =
-      "<document>" + listener.XMLOutput.join("") + "</document>";
+    const body = listener.XMLOutput.join("");
+
+    const xmlDecl = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    const rootOpen = `<document>`;
+    const xmlContent = xmlDecl + rootOpen + body + `</document>`;
 
     // 4) RETURN RESPONSE
     return new Response(JSON.stringify({ success: true, data: xmlContent }), {

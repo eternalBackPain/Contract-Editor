@@ -1,5 +1,12 @@
 # Contract-Editor
 
+## TODO
+
+* fix async issue with HTMLText in LivePreview component
+* amend HTML styling to suit contracts
+* add {{references}} and @define to formal grammar
+* convert XML to .docx
+
 ## Overview
 
 A code editor for lawyers drafting contracts. This editor will have the lawyer draft contracts in the same manner a software developer would code. It is simply a tool to draft contracts. The code will contain the drafting of a contract along with all the code necessary to format the contract. The human-readable contract will appear adjacent to your code and will live-update with every amendment to your drafting.
@@ -10,9 +17,38 @@ A code editor for lawyers drafting contracts. This editor will have the lawyer d
 
 contract-editor has the source code of the project.
 
-memos has my thinking notes on the project.
+contract-editor/
+├── app/
+│   ├── api/
+│   │   ├── parse/route.js      # ANTLR parsing endpoint
+│   │   └── transform/route.js  # XSLT transformation endpoint
+│   ├── components/             # React UI components
+│   ├── page.js                 # Main page
+│   └── layout.js               # App layout
+├── lib/
+│   ├── formal-grammar/         # ANTLR grammar, parser, listener
+│   └── xslt/                   # XSLT and SEF files
+├── package.json
+├── jsconfig.json
+└── ... (Next.js config, etc.)
 
-example code has examples of different components of the project.
+### Frontend (React/Next.js)
+
+Uses the Next.js App Router (app/ directory).
+Components for editing (TextEditor), live preview (LivePreview), navigation (NavBar), table of contents, and defined terms.
+The main page (page.js) manages state and communicates with backend API routes for parsing and transforming contract text.
+Contract Parsing (ANTLR)
+
+### Custom formal grammar defined for contracts using ANTLR.
+
+Generated parser and listener classes (ContractsParser.js, ContractsParserListener.js) in lib/formal-grammar/.
+/api/parse endpoint parses contract text into XML using the ANTLR parser and a custom listener.
+XSLT Transformation (SaxonJS)
+
+### XSLT stylesheets (compiled to SEF JSON) in lib/xslt/.
+
+/api/transform endpoint uses SaxonJS to transform XML (from the parser) into HTML or another format.
+XSLT is precompiled using the SaxonJS CLI (xslt3) and loaded at runtime.
 
 ## Mock-up
 

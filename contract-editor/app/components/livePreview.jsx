@@ -5,10 +5,10 @@ const LivePreview = ({ htmlContent }) => {
 
   return (
     <div
-      className="w-5/12 p-2 overflow-y-auto" // add 'prose' if needed
-      // dangerouslySetInnerHTML={{ __html: htmlContent }}
+      className="w-5/12 p-2 overflow-y-auto prose" // add 'prose' if needed
+      dangerouslySetInnerHTML={{ __html: text }}
     >
-      <p>{text}</p>
+      {/* <p>{text}</p> */}
     </div>
   );
 };

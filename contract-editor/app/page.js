@@ -51,7 +51,7 @@ export default function Home() {
       <div className="flex flex-row flex-grow h-full w-full">
         <TableOfContents />
         <TextEditor handleEditorChange={handleInputTextChange} />
-        <LivePreview htmlContent={XMLText} />
+        <LivePreview htmlContent={HTMLText} />
         <DefinedTerms />
       </div>
     </div>
