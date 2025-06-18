@@ -17,6 +17,7 @@ A code editor for lawyers drafting contracts. This editor will have the lawyer d
 
 contract-editor has the source code of the project.
 
+```
 contract-editor/
 ├── app/
 │   ├── api/
@@ -31,6 +32,7 @@ contract-editor/
 ├── package.json
 ├── jsconfig.json
 └── ... (Next.js config, etc.)
+```
 
 ### Frontend (React/Next.js)
 
