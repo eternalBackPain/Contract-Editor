@@ -4,7 +4,8 @@ import path from "path";
 
 const xslPath = path.resolve(process.cwd(), "lib/xslt/transform.sef.json");
 const xslText = readFileSync(xslPath, "utf-8");
-// to compile the XSL to SEF for use with SaxonJS, use in the terminal (but not VSCode's terminal for some stupid reason) (and navigate to the lib/xslt directory first): npx xslt3 -xsl:transform.xsl -export:transform.sef.json -t -ns:##html5
+// to compile the XSL to SEF for use with SaxonJS, use in the terminal (but not VSCode's terminal for some stupid reason) (and navigate to the lib/xslt directory first): 
+// npx xslt3 -xsl:transform.xsl -export:transform.sef.json -t -ns:##html5
 
 export async function POST(req) {
   const { text: xml } = await req.json();

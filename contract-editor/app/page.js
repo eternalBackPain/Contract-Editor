@@ -11,39 +11,32 @@ export default function Home() {
   const [HTMLText, setHTMLText] = useState("");
 
   const handleInputTextChange = async (value) => {
-    // Parse to XML
     console.log("Client: Sending to server =>", value);
     try {
-      const response = await fetch("/api/parse", {
+      // 1. Parse to XML
+      const parseRes = await fetch("/api/parse", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: value }),
       });
-      const { success, data } = await response.json();
-      console.log("Client: Server response =>", { success, data });
-      setXMLText(data);
-    } catch (error) {
-      console.error("Error parsing text:", error);
-    }
+      const { success: ok1, data: xml } = await parseRes.json();
+      console.log("Client: Parse response =>", { ok1, xml });
+      setXMLText(xml);
 
-    //Transform XML
-    try {
-      const response = await fetch("/api/transform", {
+      // 2. Transform XML to HTML
+      const transformRes = await fetch("/api/transform", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ text: XMLText }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: xml }),
       });
-      const { success, data } = await response.json();
-      console.log("Client: Server response =>", { success, data });
-      setHTMLText(data);
-    } catch (error) {
-      console.error("Error parsing text:", error);
+      const { success: ok2, data: html } = await transformRes.json();
+      console.log("Client: Transform response =>", { ok2, html });
+      setHTMLText(html);
+    } catch (err) {
+      console.error("Error in parse/transform flow:", err);
     }
-  };
+  }
+
 
   return (
     <div className="flex flex-col flex-grow h-screen w-screen">
