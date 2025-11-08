@@ -2,10 +2,9 @@
 
 ## TODO
 
-* fix async issue with HTMLText in LivePreview component
-* amend HTML styling to suit contracts
 * add {{references}} and @define to formal grammar
-* convert XML to .docx
+* build a .NET Web API microservice that I can call to generate / render docx
+* learn Visual Studio, C# and Open XML SDK (see https://learn.microsoft.com/en-us/office/open-xml/open-xml-sdk and https://www.ericwhite.com/blog/introduction-to-open-xml-series/)
 
 ## Overview
 
