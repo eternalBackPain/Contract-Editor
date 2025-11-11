@@ -5,6 +5,7 @@
 * add {{references}} and @define to formal grammar
 * build a .NET Web API microservice that I can call to generate / render docx
 * learn Visual Studio, C# and Open XML SDK (see https://learn.microsoft.com/en-us/office/open-xml/open-xml-sdk and https://www.ericwhite.com/blog/introduction-to-open-xml-series/)
+* look into incorporating libraries which Obsidian uses (pdf.js, Electronjs (for desktop app), CodeMirror
 
 ## Overview
 
