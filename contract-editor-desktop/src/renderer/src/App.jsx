@@ -1,32 +1,32 @@
-import Versions from './components/Versions'
-import electronLogo from './assets/electron.svg'
+import React from 'react'
+import { ViewsProvider } from './components/ViewsContext'
+import ActivityBar from './components/ActivityBar'
+import SideBar from './components/SideBar'
+import EditorView from './components/EditorView'
+import RenderedView from './components/RenderedView'
+import ExplorerView from './components/views/ExplorerView'
 
 function App() {
-  const ipcHandle = () => window.electron.ipcRenderer.send('ping')
-
   return (
     <>
-      <img alt="logo" className="logo" src={electronLogo} />
-      <div className="creator">Powered by electron-vite</div>
-      <div className="text">
-        Build an Electron app with <span className="react">React</span>
-      </div>
-      <p className="tip">
-        Please try pressing <code>F12</code> to open the devTool
-      </p>
-      <div className="actions">
-        <div className="action">
-          <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">
-            Documentation
-          </a>
+      <ViewsProvider
+        initialViews={[
+          {
+            id: 'explorer',
+            title: 'Explorer',
+            icon: '📁',
+            component: ExplorerView
+          }
+        ]}
+      >
+        <div className="app">
+          <ActivityBar />
+          <SideBar />
+          <main className="editor-area">Editor area (placeholder)</main>
+          {/* <EditorView /> */}
+          {/* <RenderedView /> */}
         </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
-            Send IPC
-          </a>
-        </div>
-      </div>
-      <Versions></Versions>
+      </ViewsProvider>
     </>
   )
 }
