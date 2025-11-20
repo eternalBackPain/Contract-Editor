@@ -1,5 +1,5 @@
 import React from 'react';
-import { useViews } from './ViewsContext';
+import { useViews } from '../contexts/ViewsContext';
 
 export default function Sidebar() {
   const { state } = useViews();

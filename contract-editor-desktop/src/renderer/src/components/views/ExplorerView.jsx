@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useViews } from '../ViewsContext';
+import { useViews } from '../../contexts/ViewsContext';
 
 const sampleTree = [
   { name: 'src', children: [{ name: 'App.tsx' }, { name: 'index.tsx' }] },

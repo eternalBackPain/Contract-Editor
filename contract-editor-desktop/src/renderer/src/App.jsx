@@ -1,5 +1,5 @@
 import React from 'react'
-import { ViewsProvider } from './components/ViewsContext'
+import { ViewsProvider } from './contexts/ViewsContext'
 import ActivityBar from './components/ActivityBar'
 import SideBar from './components/SideBar'
 import EditorView from './components/EditorView'
