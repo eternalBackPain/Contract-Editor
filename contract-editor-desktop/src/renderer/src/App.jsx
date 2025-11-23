@@ -1,32 +1,26 @@
 import React from 'react'
-import { ViewsProvider } from './contexts/ViewsContext'
-import ActivityBar from './components/ActivityBar'
-import SideBar from './components/SideBar'
-import EditorView from './components/EditorView'
-import RenderedView from './components/RenderedView'
-import ExplorerView from './components/views/ExplorerView'
+import ActivityPane from './components/ActivityPane'
+import EditorPane from './components/EditorPane'
+import ExplorerPane from './components/ExplorerPane'
+import OutputPane from './components/OutputPane'
 
 function App() {
   return (
     <>
-      <ViewsProvider
-        initialViews={[
-          {
-            id: 'explorer',
-            title: 'Explorer',
-            icon: '📁',
-            component: ExplorerView
-          }
-        ]}
-      >
-        <div className="app">
-          <ActivityBar />
-          <SideBar />
-          <main className="editor-area">Editor area (placeholder)</main>
-          {/* <EditorView /> */}
-          {/* <RenderedView /> */}
+      <div className="flex h-screen">
+        <div className="bg-slate-400 w-14">
+          <ActivityPane />
         </div>
-      </ViewsProvider>
+        <div className="bg-slate-300 w-1/5">
+          <ExplorerPane />
+        </div>
+        <div className="bg-slate-200 flex-1">
+          <EditorPane />
+        </div>
+        <div className="bg-slate-100 flex-1">
+          <OutputPane />
+        </div>
+      </div>
     </>
   )
 }
