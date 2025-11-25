@@ -1,10 +1,14 @@
 import React from 'react';
 import MonacoEditor from './MonacoEditor';
 
-function EditorPane() {
+// function handleEditorChange(value) {
+//   console.log('Value passed in: ', value);
+// }
+
+function EditorPane({onChange}) {
   return (
     <div className='flex h-screen'>
-      <MonacoEditor />
+      <MonacoEditor onChange={onChange} />
     </div>
   )
 }
