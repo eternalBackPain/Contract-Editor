@@ -1,12 +1,12 @@
+//TODO: FIX ISSUE WITH CANCELED: CANCELED
+
 // Explaination: https://chatgpt.com/s/t_69257d9339a48191beb2b18a07f0a73f
 
 import React, { useEffect, useRef } from 'react'
 import { monaco } from '../monaco'
 
-function MonacoEditor( {onChange} ) {
-  // This ref will point to a normal <div> in the DOM
+function MonacoEditor({ onChange }) {
   const containerRef = useRef(null)
-  // We'll store the editor instance here so we can clean it up later
   const editorRef = useRef(null)
 
   useEffect(() => {
@@ -25,7 +25,7 @@ function MonacoEditor( {onChange} ) {
 
     //Listen for changes
     const disposable = editor.onDidChangeModelContent(() => {
-      const value = editor.getValue();
+      const value = editor.getValue()
       if (onChange) {
         onChange(value)
       }
@@ -37,7 +37,7 @@ function MonacoEditor( {onChange} ) {
       editor.dispose()
       editorRef.current = null
     }
-  }, [onChange]) // empty array = run once when component mounts
+  }, []) // empty array = run once when component mounts
 
   // This <div> is where Monaco will render the editor.
   // Make sure it has a size (width/height) or you'll see nothing.

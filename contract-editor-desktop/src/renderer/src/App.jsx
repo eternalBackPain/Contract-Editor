@@ -5,36 +5,21 @@ import ActivityPane from './components/ActivityPane'
 import EditorPane from './components/EditorPane'
 import ExplorerPane from './components/ExplorerPane'
 import OutputPane from './components/OutputPane'
+import { parseToXML } from './lib/parseToXml'
 
 function App() {
   const [XMLText, setXMLText] = useState('')
   const [HTMLText, setHTMLText] = useState('')
 
-  const handleOnChange = async (value) => {
-    console.log('Sending to api =>', value)
-    try {
-      // 1. Parse to XML
-      const parseRes = await fetch('/api/parse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: value })
-      })
-      const { success: ok1, data: xml } = await parseRes.json()
-      console.log('Parse response =>', { ok1, xml })
-      setXMLText(xml)
+  async function handleOnChange(value) {
+    // 1. Parse to XML
+    const xml = await parseToXML(value)
+    setXMLText(xml)
+    console.log(XMLText)
+    // 2. Transform XML to HTML
 
-      // 2. Transform XML to HTML
-      const transformRes = await fetch('/api/transform', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: xml })
-      })
-      const { success: ok2, data: html } = await transformRes.json()
-      console.log('Transform response =>', { ok2, html })
-      setHTMLText(html)
-    } catch (err) {
-      console.error('Error in parse/transform flow:', err)
-    }
+    // setHTMLText(html)
+    // console.log(HTMLText)
   }
 
   return (
