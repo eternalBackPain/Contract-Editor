@@ -15,42 +15,44 @@ A code editor for lawyers drafting contracts. This editor will have the lawyer d
  
 ## Directory
 
-contract-editor has the source code of the project.
+contract-editor-desktop contains the Electron app.
 
 ```
-contract-editor/
-├── app/
-│   ├── api/
-│   │   ├── parse/route.js      # ANTLR parsing endpoint
-│   │   └── transform/route.js  # XSLT transformation endpoint
-│   ├── components/             # React UI components
-│   ├── page.js                 # Main page
-│   └── layout.js               # App layout
-├── lib/
-│   ├── formal-grammar/         # ANTLR grammar, parser, listener
-│   └── xslt/                   # XSLT and SEF files
-├── package.json
-├── jsconfig.json
-└── ... (Next.js config, etc.)
+contract-editor-desktop/
+├─ src/
+│  ├─ main/                 # Electron main process entry
+│  ├─ preload/              # Context-bridge preload
+│  └─ renderer/             # Vite + React renderer
+│     ├─ index.html
+│     └─ src/
+│        ├─ assets/
+│        ├─ components/     # Editor UI pieces
+│        ├─ contexts/       # App state providers
+│        ├─ lib/
+│        │  ├─ formal-grammar/ # ANTLR grammar + generated parser
+│        │  └─ xslt/           # XSLT sources + SEF artifacts
+│        ├─ App.jsx
+│        ├─ main.jsx
+│        └─ monaco.jsx
+├─ resources/               # App icons and packaged assets
+├─ electron.vite.config.mjs # Electron + Vite config
+├─ electron-builder.yml     # Packaging config
+├─ package.json
+└─ ...                      # ESLint / Prettier config, etc.
 ```
 
-### Frontend (React/Next.js)
+### Desktop app (Electron + React)
 
-Uses the Next.js App Router (app/ directory).
-Components for editing (TextEditor), live preview (LivePreview), navigation (NavBar), table of contents, and defined terms.
-The main page (page.js) manages state and communicates with backend API routes for parsing and transforming contract text.
-Contract Parsing (ANTLR)
+Main process bootstraps the window and app lifecycle in src/main/index.js.
+Preload exposes safe APIs to the renderer in src/preload/index.js.
+Renderer UI lives in src/renderer/src with App.jsx and Monaco editor wiring.
 
-### Custom formal grammar defined for contracts using ANTLR.
+### Parsing + transform (renderer-side)
 
-Generated parser and listener classes (ContractsParser.js, ContractsParserListener.js) in lib/formal-grammar/.
-/api/parse endpoint parses contract text into XML using the ANTLR parser and a custom listener.
-XSLT Transformation (SaxonJS)
-
-### XSLT stylesheets (compiled to SEF JSON) in lib/xslt/.
-
-/api/transform endpoint uses SaxonJS to transform XML (from the parser) into HTML or another format.
-XSLT is precompiled using the SaxonJS CLI (xslt3) and loaded at runtime.
+ANTLR grammar and generated parser live under src/renderer/src/lib/formal-grammar/.
+parseToXml.js converts editor text to XML in the renderer process.
+XSLT sources and SEF artifacts live in src/renderer/src/lib/xslt/, with a packaged copy under resources/xslt/.
+XMLToHTML.js calls the preload IPC bridge to transform XML to HTML.
 
 ## Mock-up
 
