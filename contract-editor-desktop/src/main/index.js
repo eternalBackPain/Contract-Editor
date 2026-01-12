@@ -1,9 +1,9 @@
 import { app, shell, BrowserWindow, ipcMain, Menu } from 'electron'
 import { join } from 'path'
+import { readFileSync, existsSync } from 'fs'
+import SaxonJS from 'saxon-js'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-
-//MONACO EDITOR
 
 //MENU
 
@@ -97,6 +97,32 @@ const template = [
   }
 ]
 
+const sefRelativePath = join('resources', 'xslt', 'xml-to-html.sef.json')
+let sefCache = null
+
+function resolveSefPath() {
+  const candidates = [
+    join(process.resourcesPath, 'xslt', 'xml-to-html.sef.json'),
+    join(process.resourcesPath, sefRelativePath),
+    join(app.getAppPath(), sefRelativePath),
+    join(__dirname, '../renderer/assets/xml-to-html.sef.json'),
+    join(process.cwd(), 'src', 'renderer', 'src', 'lib', 'xslt', 'xml-to-html.sef.json'),
+    join(process.cwd(), 'contract-editor-desktop', 'src', 'renderer', 'src', 'lib', 'xslt', 'xml-to-html.sef.json')
+  ]
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate
+  }
+  throw new Error('SaxonJS SEF not found. Tried: ' + candidates.join(', '))
+}
+
+function getSefText() {
+  if (!sefCache) {
+    const sefPath = resolveSefPath()
+    sefCache = readFileSync(sefPath, 'utf-8')
+  }
+  return sefCache
+}
+
 //CREATE WINDOW
 
 function createWindow() {
@@ -130,6 +156,21 @@ function createWindow() {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
+
+ipcMain.handle('xml-to-html', async (_event, xmlString) => {
+  if (!xmlString || typeof xmlString !== 'string') return ''
+  try {
+    const result = SaxonJS.transform({
+      stylesheetText: getSefText(),
+      sourceText: xmlString,
+      destination: 'serialized'
+    })
+    return result.principalResult || ''
+  } catch (error) {
+    console.error('XML transform failed', error)
+    throw error
+  }
+})
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.

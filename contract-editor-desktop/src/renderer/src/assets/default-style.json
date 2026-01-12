@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "name": "Default",
+    "version": "1.0"
+  },
+  "tokens": {
+    "fontFamilyBody": "Arial",
+    "fontFamilyHeading": "Arial",
+    "textColor": "#1f2937",
+    "accentColor": "#0f766e"
+  },
+  "root": {
+    "css": {
+      "counter-reset": "h1"
+    }
+  },
+  "elements": {
+    "HeadingLevel1": {
+      "styleType": "paragraph",
+      "css": {
+        "font-family": "{tokens.fontFamilyHeading}",
+        "font-size": "16px",
+        "font-weight": 700,
+        "margin": "0px 0 6px",
+        "counter-increment": "h1",
+        "counter-reset": "h2"
+      },
+      "before": {
+        "content": "counter(h1) \". \"",
+        "display": "inline-block",
+        "width": "2.5rem"
+      }
+    },
+    "HeadingLevel2": {
+      "styleType": "paragraph",
+      "css": {
+        "font-family": "{tokens.fontFamilyHeading}",
+        "font-size": "14px",
+        "margin": "0px 0 6px",
+        "margin-left": "5rem",
+        "counter-increment": "h2",
+        "counter-reset": "h3"
+      },
+      "before": {
+        "content": "\"(\" counter(h2, lower-alpha) \") \"",
+        "display": "inline-block",
+        "width": "2.5rem",
+        "margin-left": "-2.5rem"
+      }
+    },
+    "HeadingLevel3": {
+      "styleType": "paragraph",
+      "css": {
+        "font-family": "{tokens.fontFamilyHeading}",
+        "font-size": "14px",
+        "margin": "0px 0 6px",
+        "margin-left": "7.5rem",
+        "counter-increment": "h3",
+        "counter-reset": "h4"
+      },
+      "before": {
+        "content": "\"(\" counter(h3, lower-roman) \") \"",
+        "display": "inline-block",
+        "width": "2.5rem",
+        "margin-left": "-2.5rem"
+      }
+    },
+    "HeadingLevel4": {
+      "styleType": "paragraph",
+      "css": {
+        "font-family": "{tokens.fontFamilyHeading}",
+        "font-size": "14px",
+        "margin": "0px 0 6px",
+        "margin-left": "10rem",
+        "counter-increment": "h3"
+      },
+      "before": {
+        "content": "\"(\" counter(h3, lower-roman) \") \"",
+        "display": "inline-block",
+        "width": "2.5rem",
+        "margin-left": "-2.5rem"
+      }
+    },
+    "Paragraph": {
+      "styleType": "paragraph",
+      "css": {
+        "font-family": "{tokens.fontFamilyBody}",
+        "font-size": "14px",
+        "margin": "0 0 6px",
+        "color": "{tokens.textColor}",
+        "margin-left": "2.5rem"
+      }
+    }
+  }
+}
