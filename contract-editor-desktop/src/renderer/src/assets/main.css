@@ -1,1 +1,12 @@
 @import "tailwindcss";
+
+.resizer {
+  width: 6px;
+  cursor: col-resize;
+  background: transparent;
+  flex: 0 0 6px;
+}
+
+.resizer:hover {
+  background: #cbd5e1;
+}
