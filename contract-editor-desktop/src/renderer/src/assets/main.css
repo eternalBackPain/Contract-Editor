@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@theme {
+  --color-platinum: #ebebeb;
+  --color-onyx: #070c0d;
+  --color-irongrey: #4a5659;
+  --color-coolsteel: #859599;
+  --color-jetblack: #182525;
+}
+
 .resizer {
   width: 6px;
   cursor: col-resize;

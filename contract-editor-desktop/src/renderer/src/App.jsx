@@ -71,11 +71,11 @@ function App() {
   return (
     <>
         <div className="flex h-screen min-h-0 w-screen overflow-hidden">
-        <div className="bg-stone-400 w-12 shrink-0">
+        <div className="bg-[#4A5659] w-12 shrink-0">
           <ActivityPane active={activeExplorer} onSelect={setActiveExplorer} />
         </div>
         <div
-          className="bg-stone-300 hidden md:flex shrink-0 min-w-0"
+          className="bg-[#859599] hidden md:flex shrink-0 min-w-0"
           style={{ width: explorerWidth }}
         >
           <ExplorerPanel active={activeExplorer} />
@@ -89,7 +89,7 @@ function App() {
             <EditorPane onChange={handleOnChange} />
           </div>
           <div className="resizer" onMouseDown={startDrag('editor')} />
-          <div className="bg-stone-100 flex-1 min-w-0 min-h-0 border-l border-stone-300">
+          <div className="bg-white flex-1 min-w-0 min-h-0 border-l border-stone-300">
             <OutputPane html={HTMLText} />
           </div>
         </div>
