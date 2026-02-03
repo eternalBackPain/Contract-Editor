@@ -10,7 +10,7 @@ function OutputPane({ html }) {
   }, [])
 
   return (
-    <div className="p-2 output-pane overflow-auto h-full">
+    <div className="p-4 h-full overflow-auto text-[14px] leading-relaxed">
       <style dangerouslySetInnerHTML={{ __html: cssText }} />
       <div dangerouslySetInnerHTML={{ __html: html }} />
     </div>
