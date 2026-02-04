@@ -70,26 +70,32 @@ function App() {
 
   return (
     <>
-        <div className="flex h-screen min-h-0 w-screen overflow-hidden">
-        <div className="bg-[#4A5659] w-12 shrink-0">
+      <div className="flex h-screen min-h-0 w-screen overflow-hidden bg-slate-950 text-slate-100">
+        <div className="w-14 shrink-0 border-r border-slate-800 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 flex justify-center py-3">
           <ActivityPane active={activeExplorer} onSelect={setActiveExplorer} />
         </div>
         <div
-          className="bg-[#859599] hidden md:flex shrink-0 min-w-0"
+          className="hidden md:flex shrink-0 min-w-0 bg-slate-900/60 border-r border-slate-800 text-slate-100"
           style={{ width: explorerWidth }}
         >
           <ExplorerPanel active={activeExplorer} />
         </div>
-        <div className="resizer" onMouseDown={startDrag('explorer')} />
+        <div
+          className="w-1 flex-none cursor-col-resize bg-slate-800 hover:bg-blue-500/80"
+          onMouseDown={startDrag('explorer')}
+        />
         <div ref={editorOutputRef} className="flex flex-1 min-w-0 min-h-0">
           <div
-            className={`bg-stone-200 min-w-0 min-h-0 overflow-hidden ${editorWidth ? 'shrink-0' : 'flex-1'}`}
+            className={`min-w-0 min-h-0 overflow-hidden bg-slate-950 border-r border-slate-800 ${editorWidth ? 'shrink-0' : 'flex-1'}`}
             style={editorWidth ? { width: editorWidth } : undefined}
           >
             <EditorPane onChange={handleOnChange} />
           </div>
-          <div className="resizer" onMouseDown={startDrag('editor')} />
-          <div className="bg-white flex-1 min-w-0 min-h-0 border-l border-stone-300">
+          <div
+            className="w-1 flex-none cursor-col-resize bg-slate-800 hover:bg-blue-500/80"
+            onMouseDown={startDrag('editor')}
+          />
+          <div className="flex-1 min-w-0 min-h-0 bg-slate-50 text-slate-900 border-l border-slate-200">
             <OutputPane html={HTMLText} />
           </div>
         </div>
