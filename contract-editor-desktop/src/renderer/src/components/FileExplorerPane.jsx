@@ -1,23 +1,8 @@
-import { useEffect, useState } from 'react'
-
-function FileExplorerPane({ onFileSelect }) {
-  const [project, setProject] = useState(null)
-  const [selectedFilePath, setSelectedFilePath] = useState('')
-
-  useEffect(() => {
-    if (!window.api?.onProjectSelected) return undefined
-    const unsubscribe = window.api.onProjectSelected((projectTree) => {
-      setProject(projectTree)
-      setSelectedFilePath('')
-    })
-    return unsubscribe
-  }, [])
-
+function FileExplorerPane({ onFileSelect, project, selectedFilePath = '' }) {
   async function handleFileClick(node) {
     if (node.type !== 'file' || !window.api?.readTxtFile) return
     try {
       const content = await window.api.readTxtFile(node.path)
-      setSelectedFilePath(node.path)
       if (onFileSelect) {
         onFileSelect(content, node)
       }

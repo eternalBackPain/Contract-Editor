@@ -5,10 +5,16 @@ import { electronAPI } from '@electron-toolkit/preload'
 const api = {
   transformXmlToHtml: (xmlString) => ipcRenderer.invoke('xml-to-html', xmlString),
   readTxtFile: (filePath) => ipcRenderer.invoke('read-txt-file', filePath),
+  writeTxtFile: (filePath, content) => ipcRenderer.invoke('write-txt-file', filePath, content),
   onProjectSelected: (callback) => {
     const listener = (_event, projectTree) => callback(projectTree)
     ipcRenderer.on('project-selected', listener)
     return () => ipcRenderer.removeListener('project-selected', listener)
+  },
+  onMenuSave: (callback) => {
+    const listener = () => callback()
+    ipcRenderer.on('menu-save', listener)
+    return () => ipcRenderer.removeListener('menu-save', listener)
   }
 }
 

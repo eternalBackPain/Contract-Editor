@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import ActivityPane from './components/ActivityPane'
 import EditorPane from './components/EditorPane'
 import ExplorerPanel from './components/ExplorerPanel'
@@ -18,6 +18,8 @@ The Contract Authority is not, by executing this MICTA:
 
 function App() {
   const [editorText, setEditorText] = useState(INITIAL_EDITOR_TEXT)
+  const [activeFilePath, setActiveFilePath] = useState('')
+  const [projectTree, setProjectTree] = useState(null)
   const [XMLText, setXMLText] = useState('')
   const [HTMLText, setHTMLText] = useState('')
   const [activeExplorer, setActiveExplorer] = useState('files')
@@ -41,8 +43,35 @@ function App() {
     console.log(html)
   }
 
-  function handleFileSelect(content) {
+  async function handleSaveCurrentFile() {
+    if (!activeFilePath || !window.api?.writeTxtFile) return
+    try {
+      await window.api.writeTxtFile(activeFilePath, editorText)
+    } catch (error) {
+      console.error('Failed to save file:', error)
+    }
+  }
+
+  useEffect(() => {
+    if (!window.api?.onMenuSave) return undefined
+    const unsubscribe = window.api.onMenuSave(() => {
+      void handleSaveCurrentFile()
+    })
+    return unsubscribe
+  }, [activeFilePath, editorText])
+
+  useEffect(() => {
+    if (!window.api?.onProjectSelected) return undefined
+    const unsubscribe = window.api.onProjectSelected((tree) => {
+      setProjectTree(tree)
+      setActiveFilePath('')
+    })
+    return unsubscribe
+  }, [])
+
+  function handleFileSelect(content, node) {
     setEditorText(content)
+    setActiveFilePath(node?.path || '')
   }
 
   function clamp(val, min, max) {
@@ -95,7 +124,12 @@ function App() {
           className="bg-[#859599] hidden md:flex shrink-0 min-w-0"
           style={{ width: explorerWidth }}
         >
-          <ExplorerPanel active={activeExplorer} onFileSelect={handleFileSelect} />
+          <ExplorerPanel
+            active={activeExplorer}
+            onFileSelect={handleFileSelect}
+            projectTree={projectTree}
+            selectedFilePath={activeFilePath}
+          />
         </div>
         <div className="resizer" onMouseDown={startDrag('explorer')} />
         <div ref={editorOutputRef} className="flex flex-1 min-w-0 min-h-0">

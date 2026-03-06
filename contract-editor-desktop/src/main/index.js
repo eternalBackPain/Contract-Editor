@@ -1,10 +1,9 @@
 import { app, shell, BrowserWindow, ipcMain, Menu, dialog } from 'electron'
 import { basename, join, extname } from 'path'
-import { readFileSync, existsSync, readdirSync } from 'fs'
+import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs'
 import SaxonJS from 'saxon-js'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-
 
 function buildProjectTree(dirPath) {
   const entries = readdirSync(dirPath, { withFileTypes: true })
@@ -56,7 +55,6 @@ async function selectProjectFolder(browserWindow) {
 
 const isMac = process.platform === 'darwin'
 const template = [
-  // { role: 'appMenu' }
   ...(isMac
     ? [
         {
@@ -75,7 +73,6 @@ const template = [
         }
       ]
     : []),
-  // { role: 'fileMenu' }
   {
     label: 'File',
     submenu: [
@@ -88,11 +85,19 @@ const template = [
           selectProjectFolder(targetWindow)
         }
       },
+      {
+        label: 'Save',
+        accelerator: isMac ? 'Cmd+S' : 'Ctrl+S',
+        click: (_menuItem, browserWindow) => {
+          const targetWindow = browserWindow || BrowserWindow.getFocusedWindow()
+          if (!targetWindow) return
+          targetWindow.webContents.send('menu-save')
+        }
+      },
       { type: 'separator' },
       isMac ? { role: 'close' } : { role: 'quit' }
     ]
   },
-  // { role: 'editMenu' }
   {
     label: 'Edit',
     submenu: [
@@ -116,7 +121,6 @@ const template = [
         : [{ role: 'delete' }, { type: 'separator' }, { role: 'selectAll' }])
     ]
   },
-  // { role: 'viewMenu' }
   {
     label: 'View',
     submenu: [
@@ -131,7 +135,6 @@ const template = [
       { role: 'togglefullscreen' }
     ]
   },
-  // { role: 'windowMenu' }
   {
     label: 'Window',
     submenu: [
@@ -182,10 +185,7 @@ function getSefText() {
   return sefCache
 }
 
-//CREATE WINDOW
-
 function createWindow() {
-  // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
@@ -207,8 +207,6 @@ function createWindow() {
     return { action: 'deny' }
   })
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
@@ -216,11 +214,6 @@ function createWindow() {
   }
 }
 
-
-// In command prompt, use the following command to compile the XSLT into a SEF file:
-// cd C:\Users\johnn\Documents\GitHub\Contract-Editor\contract-editor-desktop\src\renderer\src\lib
-// npx xslt3 -xsl:xslt/xml-to-html.xsl -export:xslt/xml-to-html.sef.json -nogo -t
-// Then, copy the resulting sef.json into resources/xslt
 ipcMain.handle('xml-to-html', async (_event, xmlString) => {
   if (!xmlString || typeof xmlString !== 'string') return ''
   try {
@@ -244,16 +237,18 @@ ipcMain.handle('read-txt-file', async (_event, filePath) => {
   return readFileSync(filePath, 'utf-8')
 })
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
+ipcMain.handle('write-txt-file', async (_event, filePath, content) => {
+  if (!filePath || typeof filePath !== 'string') return false
+  if (extname(filePath).toLowerCase() !== '.txt') {
+    throw new Error('Only .txt files are supported')
+  }
+  writeFileSync(filePath, typeof content === 'string' ? content : '', 'utf-8')
+  return true
+})
+
 app.whenReady().then(() => {
-  // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
@@ -264,21 +259,12 @@ app.whenReady().then(() => {
   createWindow()
 
   app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
-

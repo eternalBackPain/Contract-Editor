@@ -3,10 +3,16 @@ import FileExplorerPane from './FileExplorerPane'
 import FormattingPane from './FormattingPane'
 import TOCPane from './TOCPane'
 
-function ExplorerPanel({ active, onFileSelect }) {
+function ExplorerPanel({ active, onFileSelect, projectTree, selectedFilePath }) {
   switch (active) {
     case 'files':
-      return <FileExplorerPane onFileSelect={onFileSelect} />
+      return (
+        <FileExplorerPane
+          onFileSelect={onFileSelect}
+          project={projectTree}
+          selectedFilePath={selectedFilePath}
+        />
+      )
     case 'defined-terms':
       return <DefinedTermsPane />
     case 'formatting':
