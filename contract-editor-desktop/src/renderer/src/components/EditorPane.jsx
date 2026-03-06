@@ -1,14 +1,10 @@
-import React from 'react';
-import MonacoEditor from './MonacoEditor';
+import React from 'react'
+import MonacoEditor from './MonacoEditor'
 
-// function handleEditorChange(value) {
-//   console.log('Value passed in: ', value);
-// }
-
-function EditorPane({onChange}) {
+function EditorPane({ onChange, value }) {
   return (
-    <div className='flex h-screen'>
-      <MonacoEditor onChange={onChange} />
+    <div className="flex h-screen">
+      <MonacoEditor onChange={onChange} value={value} />
     </div>
   )
 }

@@ -1,9 +1,56 @@
-import { app, shell, BrowserWindow, ipcMain, Menu } from 'electron'
-import { join } from 'path'
-import { readFileSync, existsSync } from 'fs'
+import { app, shell, BrowserWindow, ipcMain, Menu, dialog } from 'electron'
+import { basename, join, extname } from 'path'
+import { readFileSync, existsSync, readdirSync } from 'fs'
 import SaxonJS from 'saxon-js'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+
+
+function buildProjectTree(dirPath) {
+  const entries = readdirSync(dirPath, { withFileTypes: true })
+  const folders = []
+  const files = []
+
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      const child = buildProjectTree(join(dirPath, entry.name))
+      if (child.children.length > 0) {
+        folders.push(child)
+      }
+      continue
+    }
+
+    if (entry.isFile() && extname(entry.name).toLowerCase() === '.txt') {
+      files.push({
+        type: 'file',
+        name: entry.name,
+        path: join(dirPath, entry.name)
+      })
+    }
+  }
+
+  folders.sort((a, b) => a.name.localeCompare(b.name))
+  files.sort((a, b) => a.name.localeCompare(b.name))
+
+  return {
+    type: 'folder',
+    name: basename(dirPath),
+    path: dirPath,
+    children: [...folders, ...files]
+  }
+}
+
+async function selectProjectFolder(browserWindow) {
+  const result = await dialog.showOpenDialog(browserWindow, {
+    properties: ['openDirectory']
+  })
+
+  if (result.canceled || result.filePaths.length === 0) return
+
+  const rootPath = result.filePaths[0]
+  const tree = buildProjectTree(rootPath)
+  browserWindow.webContents.send('project-selected', tree)
+}
 
 //MENU
 
@@ -31,7 +78,19 @@ const template = [
   // { role: 'fileMenu' }
   {
     label: 'File',
-    submenu: [isMac ? { role: 'close' } : { role: 'quit' }]
+    submenu: [
+      {
+        label: 'New Project',
+        accelerator: isMac ? 'Cmd+Shift+N' : 'Ctrl+Shift+N',
+        click: (_menuItem, browserWindow) => {
+          const targetWindow = browserWindow || BrowserWindow.getFocusedWindow()
+          if (!targetWindow) return
+          selectProjectFolder(targetWindow)
+        }
+      },
+      { type: 'separator' },
+      isMac ? { role: 'close' } : { role: 'quit' }
+    ]
   },
   // { role: 'editMenu' }
   {
@@ -177,6 +236,14 @@ ipcMain.handle('xml-to-html', async (_event, xmlString) => {
   }
 })
 
+ipcMain.handle('read-txt-file', async (_event, filePath) => {
+  if (!filePath || typeof filePath !== 'string') return ''
+  if (extname(filePath).toLowerCase() !== '.txt') {
+    throw new Error('Only .txt files are supported')
+  }
+  return readFileSync(filePath, 'utf-8')
+})
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -214,3 +281,4 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+

@@ -5,9 +5,19 @@ import ExplorerPanel from './components/ExplorerPanel'
 import OutputPane from './components/OutputPane'
 import { parseToXML } from './lib/parseToXml'
 import { XMLtoHTML } from './lib/XMLToHTML'
-import { html } from 'monaco-editor'
+
+const INITIAL_EDITOR_TEXT = `@begin{GeneralConditions}
+# No guarantee of work or exclusivity
+The Contract Authority is not, by executing this MICTA:
+## bound to issue any Order Proposal to the Supplier;
+## bound to engage the Supplier to supply any goods, services and/or other activities or to enter into any Contract; or
+## restricted in any way from engaging any other person to supply any goods, services and/or other activities:
+### of any type, including goods, services and/or other activities that are the same as or similar to any Supplier's Activities or ICT Activities; or
+### at any location where, or in respect of any project that, the Supplier may be required to supply goods, services and/or other activities.
+@end{GeneralConditions}`
 
 function App() {
+  const [editorText, setEditorText] = useState(INITIAL_EDITOR_TEXT)
   const [XMLText, setXMLText] = useState('')
   const [HTMLText, setHTMLText] = useState('')
   const [activeExplorer, setActiveExplorer] = useState('files')
@@ -16,16 +26,23 @@ function App() {
   const editorOutputRef = useRef(null)
 
   async function handleOnChange(value) {
+    setEditorText(value)
+
     // 1. Parse to XML
     const xml = await parseToXML(value)
     setXMLText(xml)
     console.log(XMLText) //why does this not update
     console.log(xml)
+
     // 2. Transform XML to HTML
     const html = await XMLtoHTML(xml)
     setHTMLText(html)
     console.log(HTMLText)
     console.log(html)
+  }
+
+  function handleFileSelect(content) {
+    setEditorText(content)
   }
 
   function clamp(val, min, max) {
@@ -70,7 +87,7 @@ function App() {
 
   return (
     <>
-        <div className="flex h-screen min-h-0 w-screen overflow-hidden">
+      <div className="flex h-screen min-h-0 w-screen overflow-hidden">
         <div className="bg-[#4A5659] w-12 shrink-0">
           <ActivityPane active={activeExplorer} onSelect={setActiveExplorer} />
         </div>
@@ -78,7 +95,7 @@ function App() {
           className="bg-[#859599] hidden md:flex shrink-0 min-w-0"
           style={{ width: explorerWidth }}
         >
-          <ExplorerPanel active={activeExplorer} />
+          <ExplorerPanel active={activeExplorer} onFileSelect={handleFileSelect} />
         </div>
         <div className="resizer" onMouseDown={startDrag('explorer')} />
         <div ref={editorOutputRef} className="flex flex-1 min-w-0 min-h-0">
@@ -86,7 +103,7 @@ function App() {
             className={`bg-stone-200 min-w-0 min-h-0 overflow-hidden ${editorWidth ? 'shrink-0' : 'flex-1'}`}
             style={editorWidth ? { width: editorWidth } : undefined}
           >
-            <EditorPane onChange={handleOnChange} />
+            <EditorPane onChange={handleOnChange} value={editorText} />
           </div>
           <div className="resizer" onMouseDown={startDrag('editor')} />
           <div className="bg-white flex-1 min-w-0 min-h-0 border-l border-stone-300">

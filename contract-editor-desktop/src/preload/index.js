@@ -3,7 +3,13 @@ import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
 const api = {
-  transformXmlToHtml: (xmlString) => ipcRenderer.invoke('xml-to-html', xmlString)
+  transformXmlToHtml: (xmlString) => ipcRenderer.invoke('xml-to-html', xmlString),
+  readTxtFile: (filePath) => ipcRenderer.invoke('read-txt-file', filePath),
+  onProjectSelected: (callback) => {
+    const listener = (_event, projectTree) => callback(projectTree)
+    ipcRenderer.on('project-selected', listener)
+    return () => ipcRenderer.removeListener('project-selected', listener)
+  }
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

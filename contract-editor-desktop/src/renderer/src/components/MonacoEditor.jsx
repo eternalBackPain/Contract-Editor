@@ -5,7 +5,17 @@
 import React, { useEffect, useRef } from 'react'
 import { monaco } from '../monaco'
 
-function MonacoEditor({ onChange }) {
+const DEFAULT_EDITOR_TEXT = `@begin{GeneralConditions}
+# No guarantee of work or exclusivity
+The Contract Authority is not, by executing this MICTA:
+## bound to issue any Order Proposal to the Supplier;
+## bound to engage the Supplier to supply any goods, services and/or other activities or to enter into any Contract; or
+## restricted in any way from engaging any other person to supply any goods, services and/or other activities:
+### of any type, including goods, services and/or other activities that are the same as or similar to any Supplier's Activities or ICT Activities; or
+### at any location where, or in respect of any project that, the Supplier may be required to supply goods, services and/or other activities.
+@end{GeneralConditions}`
+
+function MonacoEditor({ onChange, value }) {
   const containerRef = useRef(null)
   const editorRef = useRef(null)
 
@@ -14,15 +24,7 @@ function MonacoEditor({ onChange }) {
 
     // Create the Monaco editor inside the <div> referenced by containerRef
     const editor = monaco.editor.create(containerRef.current, {
-      value: `@begin{GeneralConditions}
-# No guarantee of work or exclusivity
-The Contract Authority is not, by executing this MICTA:
-## bound to issue any Order Proposal to the Supplier;
-## bound to engage the Supplier to supply any goods, services and/or other activities or to enter into any Contract; or
-## restricted in any way from engaging any other person to supply any goods, services and/or other activities:
-### of any type, including goods, services and/or other activities that are the same as or similar to any Supplier's Activities or ICT Activities; or
-### at any location where, or in respect of any project that, the Supplier may be required to supply goods, services and/or other activities.
-@end{GeneralConditions}`,
+      value: value ?? DEFAULT_EDITOR_TEXT,
       language: 'plaintext',
       automaticLayout: true, // makes it resize when the container size changes
       wordWrap: 'on',
@@ -33,9 +35,9 @@ The Contract Authority is not, by executing this MICTA:
 
     //Listen for changes
     const disposable = editor.onDidChangeModelContent(() => {
-      const value = editor.getValue()
+      const nextValue = editor.getValue()
       if (onChange) {
-        onChange(value)
+        onChange(nextValue)
       }
     })
 
@@ -50,6 +52,14 @@ The Contract Authority is not, by executing this MICTA:
       editorRef.current = null
     }
   }, []) // empty array = run once when component mounts
+
+  useEffect(() => {
+    const editor = editorRef.current
+    if (!editor || typeof value !== 'string') return
+    if (editor.getValue() !== value) {
+      editor.setValue(value)
+    }
+  }, [value])
 
   // This <div> is where Monaco will render the editor.
   // Make sure it has a size (width/height) or you'll see nothing.
