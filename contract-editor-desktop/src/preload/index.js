@@ -1,15 +1,44 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
-// Custom APIs for renderer
+let projectWatchListener = null
+
 const api = {
   transformXmlToHtml: (xmlString) => ipcRenderer.invoke('xml-to-html', xmlString),
-  readTxtFile: (filePath) => ipcRenderer.invoke('read-txt-file', filePath),
-  writeTxtFile: (filePath, content) => ipcRenderer.invoke('write-txt-file', filePath, content),
-  onProjectSelected: (callback) => {
-    const listener = (_event, projectTree) => callback(projectTree)
-    ipcRenderer.on('project-selected', listener)
-    return () => ipcRenderer.removeListener('project-selected', listener)
+  openProjectFolder: () => ipcRenderer.invoke('open-project-folder'),
+  listChildren: (dirPath) => ipcRenderer.invoke('list-children', dirPath),
+  readFile: (filePath) => ipcRenderer.invoke('read-file', filePath),
+  writeFile: (filePath, content) => ipcRenderer.invoke('write-file', filePath, content),
+  createFile: (targetPath, name) =>
+    ipcRenderer.invoke('explorer-action', { action: 'create-file', targetPath, name }),
+  createFolder: (targetPath, name) =>
+    ipcRenderer.invoke('explorer-action', { action: 'create-folder', targetPath, name }),
+  renamePath: (targetPath, name) =>
+    ipcRenderer.invoke('explorer-action', { action: 'rename', targetPath, name }),
+  deletePath: (targetPath) => ipcRenderer.invoke('explorer-action', { action: 'delete', targetPath }),
+  watchProject: (callback) => {
+    if (projectWatchListener) {
+      ipcRenderer.removeListener('project-watch-event', projectWatchListener)
+    }
+
+    projectWatchListener = (_event, payload) => callback(payload)
+    ipcRenderer.on('project-watch-event', projectWatchListener)
+
+    return () => {
+      if (!projectWatchListener) return
+      ipcRenderer.removeListener('project-watch-event', projectWatchListener)
+      projectWatchListener = null
+    }
+  },
+  unwatchProject: () => {
+    if (!projectWatchListener) return
+    ipcRenderer.removeListener('project-watch-event', projectWatchListener)
+    projectWatchListener = null
+  },
+  onMenuOpenProject: (callback) => {
+    const listener = () => callback()
+    ipcRenderer.on('menu-open-project', listener)
+    return () => ipcRenderer.removeListener('menu-open-project', listener)
   },
   onMenuSave: (callback) => {
     const listener = () => callback()
@@ -18,9 +47,6 @@ const api = {
   }
 }
 
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)

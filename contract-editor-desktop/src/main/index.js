@@ -1,54 +1,129 @@
 import { app, shell, BrowserWindow, ipcMain, Menu, dialog } from 'electron'
-import { basename, join, extname } from 'path'
-import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs'
+import { basename, dirname, extname, join, resolve } from 'path'
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  watch,
+  writeFileSync
+} from 'fs'
 import SaxonJS from 'saxon-js'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 
-function buildProjectTree(dirPath) {
+function normalizePath(inputPath) {
+  const resolvedPath = resolve(inputPath)
+  const slashPath = resolvedPath.replace(/\\/g, '/')
+  return process.platform === 'win32' ? slashPath.toLowerCase() : slashPath
+}
+
+function compareByName(a, b) {
+  return a.name.localeCompare(b.name)
+}
+
+function isWithinRoot(rootPath, targetPath) {
+  const normalizedRoot = normalizePath(rootPath)
+  const normalizedTarget = normalizePath(targetPath)
+  return normalizedTarget === normalizedRoot || normalizedTarget.startsWith(`${normalizedRoot}/`)
+}
+
+function listDirectoryChildren(dirPath) {
   const entries = readdirSync(dirPath, { withFileTypes: true })
   const folders = []
   const files = []
 
   for (const entry of entries) {
+    const childPath = join(dirPath, entry.name)
     if (entry.isDirectory()) {
-      const child = buildProjectTree(join(dirPath, entry.name))
-      if (child.children.length > 0) {
-        folders.push(child)
-      }
+      folders.push({
+        type: 'folder',
+        name: entry.name,
+        path: childPath
+      })
       continue
     }
-
-    if (entry.isFile() && extname(entry.name).toLowerCase() === '.txt') {
+    if (entry.isFile()) {
       files.push({
         type: 'file',
         name: entry.name,
-        path: join(dirPath, entry.name)
+        path: childPath
       })
     }
   }
 
-  folders.sort((a, b) => a.name.localeCompare(b.name))
-  files.sort((a, b) => a.name.localeCompare(b.name))
+  folders.sort(compareByName)
+  files.sort(compareByName)
+  return [...folders, ...files]
+}
 
-  return {
-    type: 'folder',
-    name: basename(dirPath),
-    path: dirPath,
-    children: [...folders, ...files]
+let activeProjectRoot = ''
+let projectWatcher = null
+
+function stopProjectWatcher() {
+  if (projectWatcher) {
+    projectWatcher.close()
+    projectWatcher = null
   }
 }
 
-async function selectProjectFolder(browserWindow) {
+function broadcastProjectWatchEvent(event) {
+  for (const win of BrowserWindow.getAllWindows()) {
+    win.webContents.send('project-watch-event', event)
+  }
+}
+
+function startProjectWatcher(rootPath) {
+  stopProjectWatcher()
+
+  try {
+    projectWatcher = watch(rootPath, { recursive: true }, (eventType, filename) => {
+      if (!filename) return
+
+      const changedPath = join(rootPath, filename.toString())
+      let changeType = 'changed'
+      if (eventType === 'rename') {
+        changeType = existsSync(changedPath) ? 'created' : 'deleted'
+      }
+
+      broadcastProjectWatchEvent({
+        type: changeType,
+        path: changedPath
+      })
+    })
+  } catch (error) {
+    console.error('Failed to start project watcher', error)
+    projectWatcher = null
+  }
+}
+
+function assertInActiveRoot(targetPath) {
+  if (!activeProjectRoot) {
+    throw new Error('No project is currently open')
+  }
+  if (!isWithinRoot(activeProjectRoot, targetPath)) {
+    throw new Error('Path is outside the active project root')
+  }
+}
+
+async function openProjectFolder(browserWindow) {
   const result = await dialog.showOpenDialog(browserWindow, {
     properties: ['openDirectory']
   })
 
-  if (result.canceled || result.filePaths.length === 0) return
+  if (result.canceled || result.filePaths.length === 0) return null
 
   const rootPath = result.filePaths[0]
-  const tree = buildProjectTree(rootPath)
-  browserWindow.webContents.send('project-selected', tree)
+  activeProjectRoot = rootPath
+  startProjectWatcher(rootPath)
+
+  return {
+    type: 'folder',
+    name: basename(rootPath),
+    path: rootPath
+  }
 }
 
 //MENU
@@ -82,7 +157,7 @@ const template = [
         click: (_menuItem, browserWindow) => {
           const targetWindow = browserWindow || BrowserWindow.getFocusedWindow()
           if (!targetWindow) return
-          selectProjectFolder(targetWindow)
+          targetWindow.webContents.send('menu-open-project')
         }
       },
       {
@@ -229,21 +304,73 @@ ipcMain.handle('xml-to-html', async (_event, xmlString) => {
   }
 })
 
-ipcMain.handle('read-txt-file', async (_event, filePath) => {
+ipcMain.handle('open-project-folder', async (event) => {
+  const targetWindow = BrowserWindow.fromWebContents(event.sender) || BrowserWindow.getFocusedWindow()
+  if (!targetWindow) return null
+  return openProjectFolder(targetWindow)
+})
+
+ipcMain.handle('list-children', async (_event, dirPath) => {
+  if (!dirPath || typeof dirPath !== 'string') return []
+  assertInActiveRoot(dirPath)
+  return listDirectoryChildren(dirPath)
+})
+
+ipcMain.handle('read-file', async (_event, filePath) => {
   if (!filePath || typeof filePath !== 'string') return ''
-  if (extname(filePath).toLowerCase() !== '.txt') {
-    throw new Error('Only .txt files are supported')
-  }
+  assertInActiveRoot(filePath)
   return readFileSync(filePath, 'utf-8')
 })
 
-ipcMain.handle('write-txt-file', async (_event, filePath, content) => {
+ipcMain.handle('write-file', async (_event, filePath, content) => {
   if (!filePath || typeof filePath !== 'string') return false
+  assertInActiveRoot(filePath)
   if (extname(filePath).toLowerCase() !== '.txt') {
     throw new Error('Only .txt files are supported')
   }
   writeFileSync(filePath, typeof content === 'string' ? content : '', 'utf-8')
   return true
+})
+
+ipcMain.handle('explorer-action', async (_event, payload) => {
+  const { action, targetPath, name } = payload || {}
+  if (!action || !targetPath || typeof targetPath !== 'string') {
+    throw new Error('Invalid explorer action payload')
+  }
+
+  assertInActiveRoot(targetPath)
+
+  if (action === 'create-file') {
+    const nextPath = join(targetPath, name || 'untitled.txt')
+    assertInActiveRoot(nextPath)
+    writeFileSync(nextPath, '', 'utf-8')
+    return { path: nextPath }
+  }
+
+  if (action === 'create-folder') {
+    const nextPath = join(targetPath, name || 'new-folder')
+    assertInActiveRoot(nextPath)
+    mkdirSync(nextPath, { recursive: false })
+    return { path: nextPath }
+  }
+
+  if (action === 'rename') {
+    if (!name || typeof name !== 'string') {
+      throw new Error('A new name is required for rename')
+    }
+    const parentPath = dirname(targetPath)
+    const nextPath = join(parentPath, name)
+    assertInActiveRoot(nextPath)
+    renameSync(targetPath, nextPath)
+    return { path: nextPath }
+  }
+
+  if (action === 'delete') {
+    rmSync(targetPath, { recursive: true, force: false })
+    return { deleted: true }
+  }
+
+  throw new Error(`Unknown explorer action: ${action}`)
 })
 
 app.whenReady().then(() => {
@@ -264,6 +391,7 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => {
+  stopProjectWatcher()
   if (process.platform !== 'darwin') {
     app.quit()
   }

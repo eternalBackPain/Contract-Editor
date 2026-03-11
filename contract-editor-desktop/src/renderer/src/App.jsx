@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import ActivityPane from './components/ActivityPane'
 import EditorPane from './components/EditorPane'
 import ExplorerPanel from './components/ExplorerPanel'
@@ -19,38 +19,39 @@ The Contract Authority is not, by executing this MICTA:
 function App() {
   const [editorText, setEditorText] = useState(INITIAL_EDITOR_TEXT)
   const [activeFilePath, setActiveFilePath] = useState('')
-  const [projectTree, setProjectTree] = useState(null)
-  const [XMLText, setXMLText] = useState('')
   const [HTMLText, setHTMLText] = useState('')
   const [activeExplorer, setActiveExplorer] = useState('files')
   const [explorerWidth, setExplorerWidth] = useState(240)
   const [editorWidth, setEditorWidth] = useState(null)
+  const [saveBadgeVersion, setSaveBadgeVersion] = useState(0)
+  const [showSaveBadge, setShowSaveBadge] = useState(false)
   const editorOutputRef = useRef(null)
+  const saveBadgeTimerRef = useRef(null)
 
   async function handleOnChange(value) {
     setEditorText(value)
-
-    // 1. Parse to XML
     const xml = await parseToXML(value)
-    setXMLText(xml)
-    console.log(XMLText) //why does this not update
-    console.log(xml)
-
-    // 2. Transform XML to HTML
     const html = await XMLtoHTML(xml)
     setHTMLText(html)
-    console.log(HTMLText)
-    console.log(html)
   }
 
-  async function handleSaveCurrentFile() {
-    if (!activeFilePath || !window.api?.writeTxtFile) return
+  const handleSaveCurrentFile = useCallback(async () => {
+    if (!activeFilePath || !window.api?.writeFile) return
+
     try {
-      await window.api.writeTxtFile(activeFilePath, editorText)
+      await window.api.writeFile(activeFilePath, editorText)
+      setShowSaveBadge(true)
+      setSaveBadgeVersion((version) => version + 1)
+      if (saveBadgeTimerRef.current) {
+        window.clearTimeout(saveBadgeTimerRef.current)
+      }
+      saveBadgeTimerRef.current = window.setTimeout(() => {
+        setShowSaveBadge(false)
+      }, 1200)
     } catch (error) {
       console.error('Failed to save file:', error)
     }
-  }
+  }, [activeFilePath, editorText])
 
   useEffect(() => {
     if (!window.api?.onMenuSave) return undefined
@@ -58,20 +59,24 @@ function App() {
       void handleSaveCurrentFile()
     })
     return unsubscribe
-  }, [activeFilePath, editorText])
+  }, [handleSaveCurrentFile])
 
   useEffect(() => {
-    if (!window.api?.onProjectSelected) return undefined
-    const unsubscribe = window.api.onProjectSelected((tree) => {
-      setProjectTree(tree)
-      setActiveFilePath('')
-    })
-    return unsubscribe
+    return () => {
+      if (saveBadgeTimerRef.current) {
+        window.clearTimeout(saveBadgeTimerRef.current)
+      }
+    }
   }, [])
 
   function handleFileSelect(content, node) {
     setEditorText(content)
     setActiveFilePath(node?.path || '')
+  }
+
+  function handleProjectOpened() {
+    setActiveFilePath('')
+    setEditorText('')
   }
 
   function clamp(val, min, max) {
@@ -117,6 +122,12 @@ function App() {
   return (
     <>
       <div className="flex h-screen min-h-0 w-screen overflow-hidden">
+        {showSaveBadge && (
+          <div key={saveBadgeVersion} className="save-badge" role="status" aria-live="polite">
+            <span className="save-badge-icon" aria-hidden="true" />
+            Saved
+          </div>
+        )}
         <div className="bg-[#4A5659] w-12 shrink-0">
           <ActivityPane active={activeExplorer} onSelect={setActiveExplorer} />
         </div>
@@ -127,8 +138,8 @@ function App() {
           <ExplorerPanel
             active={activeExplorer}
             onFileSelect={handleFileSelect}
-            projectTree={projectTree}
             selectedFilePath={activeFilePath}
+            onProjectOpened={handleProjectOpened}
           />
         </div>
         <div className="resizer" onMouseDown={startDrag('explorer')} />
