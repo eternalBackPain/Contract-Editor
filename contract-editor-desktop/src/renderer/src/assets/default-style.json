@@ -11,7 +11,11 @@
   },
   "root": {
     "css": {
-      "counter-reset": "h1"
+      "counter-reset": "h1",
+      "font-family": "{tokens.fontFamilyBody}",
+      "font-size": "13px",
+      "line-height": "1.35",
+      "color": "{tokens.textColor}"
     }
   },
   "elements": {
@@ -19,9 +23,10 @@
       "styleType": "paragraph",
       "css": {
         "font-family": "{tokens.fontFamilyHeading}",
-        "font-size": "16px",
+        "font-size": "14px",
+        "line-height": "1.35",
         "font-weight": 700,
-        "margin": "0px 0 6px",
+        "margin": "0px 0 4px",
         "counter-increment": "h1",
         "counter-reset": "h2"
       },
@@ -35,8 +40,9 @@
       "styleType": "paragraph",
       "css": {
         "font-family": "{tokens.fontFamilyHeading}",
-        "font-size": "14px",
-        "margin": "0px 0 6px",
+        "font-size": "13px",
+        "line-height": "1.35",
+        "margin": "0px 0 4px",
         "margin-left": "5rem",
         "counter-increment": "h2",
         "counter-reset": "h3"
@@ -52,8 +58,9 @@
       "styleType": "paragraph",
       "css": {
         "font-family": "{tokens.fontFamilyHeading}",
-        "font-size": "14px",
-        "margin": "0px 0 6px",
+        "font-size": "13px",
+        "line-height": "1.35",
+        "margin": "0px 0 4px",
         "margin-left": "7.5rem",
         "counter-increment": "h3",
         "counter-reset": "h4"
@@ -69,8 +76,9 @@
       "styleType": "paragraph",
       "css": {
         "font-family": "{tokens.fontFamilyHeading}",
-        "font-size": "14px",
-        "margin": "0px 0 6px",
+        "font-size": "13px",
+        "line-height": "1.35",
+        "margin": "0px 0 4px",
         "margin-left": "10rem",
         "counter-increment": "h3"
       },
@@ -85,8 +93,9 @@
       "styleType": "paragraph",
       "css": {
         "font-family": "{tokens.fontFamilyBody}",
-        "font-size": "14px",
-        "margin": "0 0 6px",
+        "font-size": "13px",
+        "line-height": "1.35",
+        "margin": "0 0 4px",
         "color": "{tokens.textColor}",
         "margin-left": "2.5rem"
       }

@@ -1,5 +1,3 @@
-//TODO: add UI for amending styles (add as part of activity and explorer pane)
-
 import { useMemo } from 'react'
 import { compileStyles } from '../lib/styleGenerator'
 import defaultStyle from '../assets/default-style.json'
@@ -10,9 +8,9 @@ function OutputPane({ html }) {
   }, [])
 
   return (
-    <div className="p-2 output-pane overflow-auto h-full">
+    <div className="output-pane">
       <style dangerouslySetInnerHTML={{ __html: cssText }} />
-      <div dangerouslySetInnerHTML={{ __html: html }} />
+      <div className="output-document" dangerouslySetInnerHTML={{ __html: html }} />
     </div>
   )
 }

@@ -1,9 +1,8 @@
-import React from 'react'
 import MonacoEditor from './MonacoEditor'
 
 function EditorPane({ onChange, value }) {
   return (
-    <div className="flex h-screen">
+    <div className="editor-pane-body">
       <MonacoEditor onChange={onChange} value={value} />
     </div>
   )

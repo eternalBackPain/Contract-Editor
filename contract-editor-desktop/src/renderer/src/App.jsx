@@ -5,6 +5,8 @@ import ExplorerPanel from './components/ExplorerPanel'
 import OutputPane from './components/OutputPane'
 import { parseToXML } from './lib/parseToXml'
 import { XMLtoHTML } from './lib/XMLToHTML'
+import { WORKSPACE_THEME_METRICS } from './lib/theme'
+import { loadWorkspaceLayoutPrefs, saveWorkspaceLayoutPrefs } from './lib/workspacePrefs'
 
 const INITIAL_EDITOR_TEXT = `@begin{GeneralConditions}
 # No guarantee of work or exclusivity
@@ -16,17 +18,38 @@ The Contract Authority is not, by executing this MICTA:
 ### at any location where, or in respect of any project that, the Supplier may be required to supply goods, services and/or other activities.
 @end{GeneralConditions}`
 
+function fileNameFromPath(path) {
+  if (!path) return 'Untitled draft'
+  const normalized = path.replace(/\\/g, '/')
+  const parts = normalized.split('/')
+  return parts[parts.length - 1] || 'Untitled draft'
+}
+
+function countWords(text = '') {
+  const trimmed = text.trim()
+  if (!trimmed) return 0
+  return trimmed.split(/\s+/).length
+}
+
 function App() {
+  const [initialLayoutPrefs] = useState(() => loadWorkspaceLayoutPrefs())
   const [editorText, setEditorText] = useState(INITIAL_EDITOR_TEXT)
+  const [lastSavedText, setLastSavedText] = useState(INITIAL_EDITOR_TEXT)
   const [activeFilePath, setActiveFilePath] = useState('')
   const [HTMLText, setHTMLText] = useState('')
   const [activeExplorer, setActiveExplorer] = useState('files')
-  const [explorerWidth, setExplorerWidth] = useState(240)
-  const [editorWidth, setEditorWidth] = useState(null)
+  const [explorerWidth, setExplorerWidth] = useState(initialLayoutPrefs.explorerWidth)
+  const [editorWidth, setEditorWidth] = useState(initialLayoutPrefs.editorWidth)
+  const [showExplorer, setShowExplorer] = useState(initialLayoutPrefs.showExplorer)
+  const [showPreview, setShowPreview] = useState(initialLayoutPrefs.showPreview)
   const [saveBadgeVersion, setSaveBadgeVersion] = useState(0)
   const [showSaveBadge, setShowSaveBadge] = useState(false)
   const editorOutputRef = useRef(null)
   const saveBadgeTimerRef = useRef(null)
+  const isDirty = editorText !== lastSavedText
+  const currentFileLabel = fileNameFromPath(activeFilePath)
+  const saveLabel = activeFilePath ? (isDirty ? 'Unsaved changes' : 'Saved') : 'Scratch buffer'
+  const wordCount = countWords(editorText)
 
   async function handleOnChange(value) {
     setEditorText(value)
@@ -40,6 +63,7 @@ function App() {
 
     try {
       await window.api.writeFile(activeFilePath, editorText)
+      setLastSavedText(editorText)
       setShowSaveBadge(true)
       setSaveBadgeVersion((version) => version + 1)
       if (saveBadgeTimerRef.current) {
@@ -69,14 +93,25 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    saveWorkspaceLayoutPrefs({
+      explorerWidth,
+      editorWidth,
+      showExplorer,
+      showPreview
+    })
+  }, [editorWidth, explorerWidth, showExplorer, showPreview])
+
   function handleFileSelect(content, node) {
     setEditorText(content)
+    setLastSavedText(content)
     setActiveFilePath(node?.path || '')
   }
 
   function handleProjectOpened() {
     setActiveFilePath('')
     setEditorText('')
+    setLastSavedText('')
   }
 
   function clamp(val, min, max) {
@@ -89,6 +124,7 @@ function App() {
       const startX = e.clientX
       const startExplorer = explorerWidth
       const bounds = editorOutputRef.current?.getBoundingClientRect()
+      if (!bounds) return
       const startEditor = editorWidth ?? Math.floor(bounds.width / 2)
 
       document.body.style.userSelect = 'none'
@@ -97,12 +133,18 @@ function App() {
       function onMove(ev) {
         const dx = ev.clientX - startX
         if (kind === 'explorer') {
-          setExplorerWidth(clamp(startExplorer + dx, 160, 480))
+          setExplorerWidth(
+            clamp(
+              startExplorer + dx,
+              WORKSPACE_THEME_METRICS.minExplorerWidth,
+              WORKSPACE_THEME_METRICS.maxExplorerWidth
+            )
+          )
           return
         }
         if (kind === 'editor') {
-          const min = 240
-          const max = bounds.width - 240
+          const min = WORKSPACE_THEME_METRICS.minPaneWidth
+          const max = bounds.width - WORKSPACE_THEME_METRICS.minPaneWidth
           setEditorWidth(clamp(startEditor + dx, min, max))
         }
       }
@@ -119,44 +161,93 @@ function App() {
     }
   }
 
+  function handleActivitySelect(next) {
+    setActiveExplorer((prev) => {
+      if (prev === next && showExplorer) {
+        setShowExplorer(false)
+        return prev
+      }
+      setShowExplorer(true)
+      return next
+    })
+  }
+
   return (
-    <>
-      <div className="flex h-screen min-h-0 w-screen overflow-hidden">
-        {showSaveBadge && (
-          <div key={saveBadgeVersion} className="save-badge" role="status" aria-live="polite">
-            <span className="save-badge-icon" aria-hidden="true" />
-            Saved
+    <div className="workspace-shell">
+      {showSaveBadge && (
+        <div key={saveBadgeVersion} className="save-badge" role="status" aria-live="polite">
+          <span className="save-badge-icon" aria-hidden="true" />
+          Saved
+        </div>
+      )}
+      <div className="workspace-main">
+        <div className="activity-bar">
+          <ActivityPane active={activeExplorer} onSelect={handleActivitySelect} />
+        </div>
+        {showExplorer ? (
+          <div className="workspace-sidebar" style={{ width: explorerWidth }}>
+            <ExplorerPanel
+              active={activeExplorer}
+              onFileSelect={handleFileSelect}
+              selectedFilePath={activeFilePath}
+              onProjectOpened={handleProjectOpened}
+            />
           </div>
-        )}
-        <div className="bg-[#4A5659] w-12 shrink-0">
-          <ActivityPane active={activeExplorer} onSelect={setActiveExplorer} />
-        </div>
-        <div
-          className="bg-[#859599] hidden md:flex shrink-0 min-w-0"
-          style={{ width: explorerWidth }}
-        >
-          <ExplorerPanel
-            active={activeExplorer}
-            onFileSelect={handleFileSelect}
-            selectedFilePath={activeFilePath}
-            onProjectOpened={handleProjectOpened}
-          />
-        </div>
-        <div className="resizer" onMouseDown={startDrag('explorer')} />
-        <div ref={editorOutputRef} className="flex flex-1 min-w-0 min-h-0">
+        ) : null}
+        {showExplorer ? (
+          <div className="resizer workspace-resizer" onMouseDown={startDrag('explorer')} />
+        ) : null}
+        <div ref={editorOutputRef} className="workspace-editor-group">
           <div
-            className={`bg-stone-200 min-w-0 min-h-0 overflow-hidden ${editorWidth ? 'shrink-0' : 'flex-1'}`}
-            style={editorWidth ? { width: editorWidth } : undefined}
+            className={`workspace-pane workspace-editor-pane ${showPreview && editorWidth ? 'is-fixed' : 'is-flex'}`}
+            style={showPreview && editorWidth ? { width: editorWidth } : undefined}
           >
-            <EditorPane onChange={handleOnChange} value={editorText} />
+            <header className="pane-header">
+              <span className="pane-title">{currentFileLabel}</span>
+              <span className={`pane-meta ${isDirty ? 'is-dirty' : ''}`}>{saveLabel}</span>
+            </header>
+            <div className="pane-body">
+              <EditorPane onChange={handleOnChange} value={editorText} />
+            </div>
           </div>
-          <div className="resizer" onMouseDown={startDrag('editor')} />
-          <div className="bg-white flex-1 min-w-0 min-h-0 border-l border-stone-300">
-            <OutputPane html={HTMLText} />
-          </div>
+          {showPreview ? (
+            <div className="resizer workspace-resizer" onMouseDown={startDrag('editor')} />
+          ) : null}
+          {showPreview ? (
+            <div className="workspace-pane workspace-preview-pane">
+              <header className="pane-header">
+                <span className="pane-title">Rendered Contract</span>
+                <button
+                  type="button"
+                  className="pane-header-button"
+                  onClick={() => setShowPreview(false)}
+                >
+                  Hide Preview
+                </button>
+              </header>
+              <div className="pane-body">
+                <OutputPane html={HTMLText} />
+              </div>
+            </div>
+          ) : (
+            <div className="preview-collapsed">
+              <button
+                type="button"
+                className="pane-header-button"
+                onClick={() => setShowPreview(true)}
+              >
+                Show Preview
+              </button>
+            </div>
+          )}
         </div>
       </div>
-    </>
+      <footer className="workspace-status-bar">
+        <span>{currentFileLabel}</span>
+        <span>{wordCount} words</span>
+        <span>{saveLabel}</span>
+      </footer>
+    </div>
   )
 }
 

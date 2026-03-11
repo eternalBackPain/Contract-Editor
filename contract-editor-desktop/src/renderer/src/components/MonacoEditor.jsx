@@ -1,9 +1,11 @@
-//TODO: FIX ISSUE WITH CANCELED: CANCELED
+// TODO: FIX ISSUE WITH CANCELED: CANCELED
 
 // Explaination: https://chatgpt.com/s/t_69257d9339a48191beb2b18a07f0a73f
 
-import React, { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { monaco } from '../monaco'
+
+const EDITOR_THEME_NAME = 'contract-editor-theme'
 
 const DEFAULT_EDITOR_TEXT = `@begin{GeneralConditions}
 # No guarantee of work or exclusivity
@@ -22,18 +24,45 @@ function MonacoEditor({ onChange, value }) {
   useEffect(() => {
     if (!containerRef.current) return
 
-    // Create the Monaco editor inside the <div> referenced by containerRef
+    monaco.editor.defineTheme(EDITOR_THEME_NAME, {
+      base: 'vs',
+      inherit: true,
+      rules: [],
+      colors: {
+        'editor.background': '#ffffff',
+        'editor.foreground': '#1a1f22',
+        'editor.lineHighlightBackground': '#f4f6f7',
+        'editorLineNumber.foreground': '#7a868f',
+        'editorLineNumber.activeForeground': '#46525a',
+        'editor.selectionBackground': '#dbe3e8',
+        'editor.inactiveSelectionBackground': '#e8edf0',
+        'editorCursor.foreground': '#233136',
+        'editorIndentGuide.background1': '#ced5da',
+        'editorIndentGuide.activeBackground1': '#aab5bc'
+      }
+    })
+
     const editor = monaco.editor.create(containerRef.current, {
       value: value ?? DEFAULT_EDITOR_TEXT,
       language: 'plaintext',
-      automaticLayout: true, // makes it resize when the container size changes
+      theme: EDITOR_THEME_NAME,
+      automaticLayout: true,
+      fontFamily: 'Consolas, "Courier New", monospace',
+      fontSize: 13,
+      lineHeight: 19,
       wordWrap: 'on',
-      minimap: { enabled: false }
+      minimap: { enabled: false },
+      cursorBlinking: 'solid',
+      smoothScrolling: true,
+      renderWhitespace: 'selection',
+      scrollBeyondLastLine: false,
+      bracketPairColorization: { enabled: true },
+      guides: { bracketPairs: true, indentation: true },
+      stickyScroll: { enabled: true }
     })
 
     editorRef.current = editor
 
-    //Listen for changes
     const disposable = editor.onDidChangeModelContent(() => {
       const nextValue = editor.getValue()
       if (onChange) {
@@ -45,13 +74,12 @@ function MonacoEditor({ onChange, value }) {
       onChange(editor.getValue())
     }
 
-    // Cleanup function: React will call this when the component unmounts
     return () => {
       disposable.dispose()
       editor.dispose()
       editorRef.current = null
     }
-  }, []) // empty array = run once when component mounts
+  }, [])
 
   useEffect(() => {
     const editor = editorRef.current
@@ -61,8 +89,6 @@ function MonacoEditor({ onChange, value }) {
     }
   }, [value])
 
-  // This <div> is where Monaco will render the editor.
-  // Make sure it has a size (width/height) or you'll see nothing.
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 }
 
