@@ -22,7 +22,14 @@ function FolderIcon({ expanded }) {
 function FileIcon() {
   return (
     <svg viewBox="0 0 16 16" className="explorer-icon" aria-hidden="true">
-      <path d="M3 1.5h6l4 4v9H3z M8.8 1.5V5.5H13" fill="none" stroke="currentColor" />
+      <path
+        d="M3 1.5h6l4 4v9H3z M8.8 1.5V5.5H13"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="square"
+        strokeLinejoin="miter"
+      />
     </svg>
   )
 }

@@ -1,5 +1,3 @@
-import formattingPaneIcon from '../assets/formatting-pane.svg'
-
 function FormattingPane({
   draftText,
   parseError,
@@ -11,10 +9,7 @@ function FormattingPane({
 }) {
   return (
     <div className="formatting-pane">
-      <h2 className="panel-placeholder-title panel-placeholder-title-row">
-        <img src={formattingPaneIcon} alt="" className="panel-placeholder-title-icon" />
-        <span>Formatting</span>
-      </h2>
+      <h2 className="panel-placeholder-title">Formatting</h2>
       <p className="panel-placeholder-text">
         Default style profile JSON is prefilled below. Edit and apply to update rendered output.
       </p>

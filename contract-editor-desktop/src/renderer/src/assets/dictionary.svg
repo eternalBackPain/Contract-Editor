@@ -1,2 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-<svg width="800px" height="800px" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><defs><style>.a{fill:none;stroke:#000000;stroke-linecap:round;stroke-linejoin:round;}</style></defs><path class="a" d="M12.73,4.5H10.4a2,2,0,0,0-2,2v35a2,2,0,0,0,2,2h2.33"/><path class="a" d="M12.73,4.5v39H37.6a2,2,0,0,0,2-2V6.5a2,2,0,0,0-2-2Z"/><circle class="a" cx="28.1947" cy="22.6705" r="6.3286"/><line class="a" x1="23.7228" y1="27.1424" x2="17.6714" y2="33.1939"/></svg>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  fill="none"
+  viewBox="0 0 24 24"
+  stroke-width="1.5"
+  stroke="currentColor"
+  class="size-6"
+>
+  <path
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
+  />
+</svg>
