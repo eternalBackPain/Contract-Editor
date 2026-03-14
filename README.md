@@ -17,13 +17,13 @@ A code editor for lawyers drafting contracts. This editor will have the lawyer d
 
 The project is built around one core idea: contract drafting should feel like software development, with immediate feedback and predictable outcomes from structured text.
 
-The structure favors clear boundaries and reuse:
+The repo structure favors clear boundaries and reuse:
 
 * `packages/core` contains the parser/validator/compiler as the single source of truth for the Contract Editor language.
 * `packages/cli` exists so the same language engine can run in automation, CI, and scripted workflows without the desktop UI.
 * the Electron app (`src/main`, `src/preload`, `src/renderer`) focuses on UX and integration, while delegating language semantics to `packages/core`.
 
-We introduced `packages/core` to avoid duplicating parse/transform logic in multiple places. This keeps language behavior consistent between desktop preview and CLI output, makes parser changes easier to test and ship, and allows future tools to reuse the same contract language engine.
+I introduced `packages/core` to avoid duplicating parse/transform logic in multiple places. This keeps language behavior consistent between desktop preview and CLI output, makes parser changes easier to test and ship, and allows future tools to reuse the same contract language engine.
 
 ## Directory
 
