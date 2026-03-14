@@ -8,7 +8,7 @@ function printHelp() {
 
 Usage:
   contractc validate <input>
-  contractc compile <input> --to xml|html [--out <path>]
+  contractc compile <input> --to xml|html [--out <path>] [--style <path>] [--embed-style]
 
 Notes:
   - Supported input extensions: .contract, .txt
@@ -34,6 +34,15 @@ function readSource(inputPath) {
   return readFileSync(fullPath, 'utf-8')
 }
 
+function readStyleProfile(stylePath) {
+  const raw = readFileSync(resolve(stylePath), 'utf-8')
+  try {
+    return JSON.parse(raw)
+  } catch {
+    throw new Error(`Invalid style profile JSON at '${stylePath}'.`)
+  }
+}
+
 function parseArgs(argv) {
   const [command, ...rest] = argv
   if (!command || command === '--help' || command === '-h') {
@@ -52,6 +61,8 @@ function parseArgs(argv) {
 
     let target = ''
     let outPath = ''
+    let stylePath = ''
+    let embedStyle = false
 
     for (let i = 1; i < rest.length; i += 1) {
       const arg = rest[i]
@@ -65,6 +76,15 @@ function parseArgs(argv) {
         i += 1
         continue
       }
+      if (arg === '--style') {
+        stylePath = rest[i + 1] || ''
+        i += 1
+        continue
+      }
+      if (arg === '--embed-style') {
+        embedStyle = true
+        continue
+      }
       throw new Error(`Unknown option '${arg}'`)
     }
 
@@ -72,7 +92,11 @@ function parseArgs(argv) {
       throw new Error("compile requires '--to xml' or '--to html'.")
     }
 
-    return { command, input, target, outPath }
+    if (stylePath === '' && rest.includes('--style')) {
+      throw new Error("compile option '--style' requires a path.")
+    }
+
+    return { command, input, target, outPath, stylePath, embedStyle }
   }
 
   throw new Error(`Unknown command '${command}'`)
@@ -92,14 +116,34 @@ function runValidate(input) {
   return 1
 }
 
-function runCompile(input, target, outPath) {
+function runCompile(input, target, outPath, stylePath, embedStyle) {
   const source = readSource(input)
-  const result = compile(source, target)
+  const styleProfile = stylePath ? readStyleProfile(stylePath) : undefined
+
+  if (target === 'xml' && (stylePath || embedStyle)) {
+    console.error('Warning: style options are ignored when compiling to xml.')
+  }
+
+  const compileOptions =
+    target === 'html'
+      ? {
+          styleProfile,
+          includeCss: embedStyle
+        }
+      : undefined
+
+  const result = compile(source, target, compileOptions)
   if (!result.success) {
     for (const diagnostic of result.diagnostics) {
       console.error(formatDiagnostic(diagnostic))
     }
     return 1
+  }
+
+  for (const diagnostic of result.diagnostics) {
+    if (diagnostic?.severity === 'warning') {
+      console.error(formatDiagnostic(diagnostic))
+    }
   }
 
   if (outPath) {
@@ -122,7 +166,7 @@ try {
   const code =
     parsed.command === 'validate'
       ? runValidate(parsed.input)
-      : runCompile(parsed.input, parsed.target, parsed.outPath)
+      : runCompile(parsed.input, parsed.target, parsed.outPath, parsed.stylePath, parsed.embedStyle)
 
   process.exit(code)
 } catch (error) {

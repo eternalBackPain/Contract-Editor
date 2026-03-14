@@ -529,6 +529,59 @@ input {
   padding: 12px;
 }
 
+.formatting-pane {
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formatting-json-input {
+  width: 100%;
+  min-height: 220px;
+  flex: 1;
+  border: 1px solid rgba(17, 33, 36, 0.24);
+  border-radius: 4px;
+  background: #f8fbfc;
+  color: #102123;
+  padding: 8px;
+  font-size: 12px;
+  line-height: 1.35;
+  font-family: Consolas, 'Courier New', monospace;
+  resize: vertical;
+}
+
+.formatting-json-input:focus {
+  outline: 1px solid #54666e;
+}
+
+.formatting-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.formatting-status {
+  margin: 0;
+  font-size: 11px;
+  color: #274148;
+}
+
+.formatting-error {
+  margin: 0;
+  font-size: 11px;
+  color: #991b1b;
+}
+
+.formatting-diagnostics {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 11px;
+  line-height: 1.3;
+  color: #7a2020;
+}
+
 
 .panel-placeholder-title {
   margin: 0 0 4px;

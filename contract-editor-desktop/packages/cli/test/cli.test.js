@@ -63,3 +63,43 @@ test('compile supports .txt and writes output file', () => {
     rmSync(dir, { recursive: true, force: true })
   }
 })
+
+test('compile html can embed style from profile file', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'contractc-'))
+  try {
+    const input = writeFixture(dir, 'input.contract', VALID_SOURCE)
+    const stylePath = writeFixture(
+      dir,
+      'style.json',
+      JSON.stringify(
+        {
+          tokens: {
+            'font.body': 'Times New Roman'
+          }
+        },
+        null,
+        2
+      )
+    )
+    const run = runCli(['compile', input, '--to', 'html', '--style', stylePath, '--embed-style'])
+    assert.equal(run.status, 0)
+    assert.match(run.stdout, /<style>/)
+    assert.match(run.stdout, /Times New Roman/)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('compile xml ignores style flags with warning', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'contractc-'))
+  try {
+    const input = writeFixture(dir, 'input.contract', VALID_SOURCE)
+    const stylePath = writeFixture(dir, 'style.json', '{}')
+    const run = runCli(['compile', input, '--to', 'xml', '--style', stylePath, '--embed-style'])
+    assert.equal(run.status, 0)
+    assert.match(run.stderr, /style options are ignored/i)
+    assert.match(run.stdout, /<document>/)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})

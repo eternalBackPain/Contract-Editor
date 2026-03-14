@@ -15,3 +15,4 @@ export const WORKSPACE_THEME_METRICS = Object.freeze({
 })
 
 export const WORKSPACE_LAYOUT_STORAGE_KEY = 'workspace-layout:v1'
+export const WORKSPACE_STYLE_STORAGE_KEY = 'workspace-style:v1'

@@ -2,10 +2,17 @@ import antlr4 from 'antlr4'
 import ContractsLexer from './formal-grammar/ContractsLexer.js'
 import ContractsParser from './formal-grammar/ContractsParser.js'
 import ContractsParserListener from './formal-grammar/ContractsParserListener.js'
+import {
+  getDefaultStyleProfile,
+  resolveStyleProfile,
+  styleProfileToCss,
+  validateStyleProfile
+} from './style-profile.js'
 
 export const DiagnosticCodes = {
   SYNTAX: 'E_SYNTAX',
-  BLOCK_NAME_MISMATCH: 'E_BLOCK_NAME_MISMATCH'
+  BLOCK_NAME_MISMATCH: 'E_BLOCK_NAME_MISMATCH',
+  STYLE_PROFILE: 'W_STYLE_PROFILE'
 }
 
 function normalizeMessage(message) {
@@ -230,10 +237,49 @@ export function toHtmlFromXml(xml) {
   ].join('')
 }
 
-export function compile(source, target) {
+function normalizeCompileOptions(options) {
+  if (!options || typeof options !== 'object') {
+    return {
+      styleProfile: undefined,
+      includeCss: false
+    }
+  }
+
+  return {
+    styleProfile:
+      options.styleProfile && typeof options.styleProfile === 'object' ? options.styleProfile : undefined,
+    includeCss: options.includeCss === true
+  }
+}
+
+function injectCssIntoHtml(html, cssText) {
+  if (!cssText) return html
+  if (!html.includes('</head>')) return html
+  return html.replace('</head>', `<style>${cssText}</style></head>`)
+}
+
+export function renderHtml(source, options) {
+  return compile(source, 'html', options)
+}
+
+export {
+  getDefaultStyleProfile,
+  resolveStyleProfile,
+  styleProfileToCss,
+  validateStyleProfile
+}
+
+export function compile(source, target, options) {
   if (target !== 'xml' && target !== 'html') {
     throw new Error(`Unsupported compile target: ${target}`)
   }
+
+  const normalizedOptions = normalizeCompileOptions(options)
+  const styleDiagnostics = validateStyleProfile(normalizedOptions.styleProfile).map((diagnostic) => ({
+    ...diagnostic,
+    code: DiagnosticCodes.STYLE_PROFILE
+  }))
+  const resolvedStyleProfile = resolveStyleProfile(normalizedOptions.styleProfile)
 
   const xmlResult = toXml(source)
   if (xmlResult.diagnostics.length > 0 || !xmlResult.xml) {
@@ -241,7 +287,7 @@ export function compile(source, target) {
       success: false,
       target,
       output: '',
-      diagnostics: xmlResult.diagnostics
+      diagnostics: [...xmlResult.diagnostics, ...styleDiagnostics]
     }
   }
 
@@ -250,14 +296,19 @@ export function compile(source, target) {
       success: true,
       target,
       output: xmlResult.xml,
-      diagnostics: []
+      diagnostics: styleDiagnostics
     }
   }
+
+  const html = toHtmlFromXml(xmlResult.xml)
+  const output = normalizedOptions.includeCss
+    ? injectCssIntoHtml(html, styleProfileToCss(resolvedStyleProfile))
+    : html
 
   return {
     success: true,
     target,
-    output: toHtmlFromXml(xmlResult.xml),
-    diagnostics: []
+    output,
+    diagnostics: styleDiagnostics
   }
 }

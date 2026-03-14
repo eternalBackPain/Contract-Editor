@@ -3,9 +3,19 @@ import ActivityPane from './components/ActivityPane'
 import EditorPane from './components/EditorPane'
 import ExplorerPanel from './components/ExplorerPanel'
 import OutputPane from './components/OutputPane'
-import { compile } from '@contract-editor/core'
+import {
+  compile,
+  getDefaultStyleProfile,
+  resolveStyleProfile,
+  validateStyleProfile
+} from '@contract-editor/core'
 import { WORKSPACE_THEME_METRICS } from './lib/theme'
-import { loadWorkspaceLayoutPrefs, saveWorkspaceLayoutPrefs } from './lib/workspacePrefs'
+import {
+  loadWorkspaceLayoutPrefs,
+  loadWorkspaceStylePrefs,
+  saveWorkspaceLayoutPrefs,
+  saveWorkspaceStylePrefs
+} from './lib/workspacePrefs'
 
 const INITIAL_EDITOR_TEXT = `@begin{GeneralConditions}
 # No guarantee of work or exclusivity
@@ -65,12 +75,36 @@ function diagnosticsToPreviewHtml(diagnostics) {
   return `<ol style="margin:0; padding:0;">${items}</ol>`
 }
 
+function isPlainObject(value) {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+function formatStyleDraft(value) {
+  if (!isPlainObject(value) || Object.keys(value).length === 0) {
+    return JSON.stringify(getDefaultStyleProfile(), null, 2)
+  }
+  return JSON.stringify(resolveStyleProfile(value), null, 2)
+}
+
+const DEFAULT_STYLE_PROFILE = getDefaultStyleProfile()
+const DEFAULT_STYLE_PROFILE_TEXT = JSON.stringify(DEFAULT_STYLE_PROFILE)
+
+function isDefaultProfile(profile) {
+  if (!isPlainObject(profile)) return true
+  return JSON.stringify(resolveStyleProfile(profile)) === DEFAULT_STYLE_PROFILE_TEXT
+}
+
 function App() {
   const [initialLayoutPrefs] = useState(() => loadWorkspaceLayoutPrefs())
+  const [initialStyleOverride] = useState(() => loadWorkspaceStylePrefs())
   const [editorText, setEditorText] = useState(INITIAL_EDITOR_TEXT)
   const [lastSavedText, setLastSavedText] = useState(INITIAL_EDITOR_TEXT)
   const [activeFilePath, setActiveFilePath] = useState('')
   const [HTMLText, setHTMLText] = useState('')
+  const [styleProfileOverride, setStyleProfileOverride] = useState(initialStyleOverride)
+  const [styleDraftText, setStyleDraftText] = useState(() => formatStyleDraft(initialStyleOverride))
+  const [styleParseError, setStyleParseError] = useState('')
+  const [styleDiagnostics, setStyleDiagnostics] = useState([])
   const [activeExplorer, setActiveExplorer] = useState('files')
   const [explorerWidth, setExplorerWidth] = useState(initialLayoutPrefs.explorerWidth)
   const [editorWidth, setEditorWidth] = useState(initialLayoutPrefs.editorWidth)
@@ -84,12 +118,58 @@ function App() {
   const currentFileLabel = fileNameFromPath(activeFilePath)
   const saveLabel = activeFilePath ? (isDirty ? 'Unsaved changes' : 'Saved') : 'Scratch buffer'
   const wordCount = countWords(editorText)
+  const isUsingDefaultStyle = isDefaultProfile(styleProfileOverride)
 
-  async function handleOnChange(value) {
+  function handleOnChange(value) {
     setEditorText(value)
-    const result = compile(value, 'html')
-    setHTMLText(result.success ? result.output : diagnosticsToPreviewHtml(result.diagnostics))
   }
+
+  const compilePreview = useCallback((source, styleOverride) => {
+    const result = compile(source, 'html', {
+      styleProfile: styleOverride,
+      includeCss: true
+    })
+    setHTMLText(result.success ? result.output : diagnosticsToPreviewHtml(result.diagnostics))
+  }, [])
+
+  const handleApplyStyleProfile = useCallback(() => {
+    let parsed
+    try {
+      parsed = JSON.parse(styleDraftText || '{}')
+    } catch {
+      setStyleParseError('Invalid JSON. Fix the profile before applying.')
+      setStyleDiagnostics([])
+      return
+    }
+
+    if (!isPlainObject(parsed)) {
+      setStyleParseError('Style profile override must be a JSON object.')
+      setStyleDiagnostics([])
+      return
+    }
+
+    const diagnostics = validateStyleProfile(parsed)
+    const resolvedProfile = resolveStyleProfile(parsed)
+    const nextStyleProfile = isDefaultProfile(resolvedProfile) ? null : resolvedProfile
+    setStyleDiagnostics(diagnostics)
+    setStyleParseError('')
+    setStyleProfileOverride(nextStyleProfile)
+    setStyleDraftText(JSON.stringify(resolvedProfile, null, 2))
+    saveWorkspaceStylePrefs(nextStyleProfile)
+  }, [styleDraftText])
+
+  const handleResetStyleProfile = useCallback(() => {
+    setStyleProfileOverride(null)
+    setStyleDraftText(JSON.stringify(DEFAULT_STYLE_PROFILE, null, 2))
+    setStyleParseError('')
+    setStyleDiagnostics([])
+    saveWorkspaceStylePrefs(null)
+  }, [])
+
+  const handleStyleDraftChange = useCallback((value) => {
+    setStyleDraftText(value)
+    setStyleParseError('')
+  }, [])
 
   const handleSaveCurrentFile = useCallback(async () => {
     if (!activeFilePath || !window.api?.writeFile) return
@@ -134,6 +214,10 @@ function App() {
       showPreview
     })
   }, [editorWidth, explorerWidth, showExplorer, showPreview])
+
+  useEffect(() => {
+    compilePreview(editorText, styleProfileOverride)
+  }, [compilePreview, editorText, styleProfileOverride])
 
   function handleFileSelect(content, node) {
     setEditorText(content)
@@ -224,6 +308,15 @@ function App() {
               onFileSelect={handleFileSelect}
               selectedFilePath={activeFilePath}
               onProjectOpened={handleProjectOpened}
+              formattingState={{
+                draftText: styleDraftText,
+                parseError: styleParseError,
+                diagnostics: styleDiagnostics,
+                isUsingDefault: isUsingDefaultStyle,
+                onDraftChange: handleStyleDraftChange,
+                onApply: handleApplyStyleProfile,
+                onReset: handleResetStyleProfile
+              }}
             />
           </div>
         ) : null}

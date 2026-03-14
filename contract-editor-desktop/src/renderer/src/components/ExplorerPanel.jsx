@@ -3,7 +3,13 @@ import FileExplorerPane from './FileExplorerPane'
 import FormattingPane from './FormattingPane'
 import TOCPane from './TOCPane'
 
-function ExplorerPanel({ active, onFileSelect, selectedFilePath, onProjectOpened }) {
+function ExplorerPanel({
+  active,
+  onFileSelect,
+  selectedFilePath,
+  onProjectOpened,
+  formattingState
+}) {
   function paneClass(name) {
     return active === name ? 'w-full h-full' : 'hidden w-full h-full'
   }
@@ -24,7 +30,15 @@ function ExplorerPanel({ active, onFileSelect, selectedFilePath, onProjectOpened
         <DefinedTermsPane />
       </div>
       <div className={paneClass('formatting')}>
-        <FormattingPane />
+        <FormattingPane
+          draftText={formattingState.draftText}
+          parseError={formattingState.parseError}
+          diagnostics={formattingState.diagnostics}
+          isUsingDefault={formattingState.isUsingDefault}
+          onDraftChange={formattingState.onDraftChange}
+          onApply={formattingState.onApply}
+          onReset={formattingState.onReset}
+        />
       </div>
     </>
   )

@@ -1,6 +1,14 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { compile, toXml, validate, DiagnosticCodes } from '../src/index.js'
+import {
+  compile,
+  DiagnosticCodes,
+  renderHtml,
+  styleProfileToCss,
+  toXml,
+  validate,
+  validateStyleProfile
+} from '../src/index.js'
 
 const VALID_SOURCE = `@begin{GeneralConditions}
 # No guarantee of work or exclusivity
@@ -22,6 +30,60 @@ test('valid source compiles to html', () => {
   assert.equal(result.diagnostics.length, 0)
   assert.match(result.output, /<html/i)
   assert.match(result.output, /<h1>No guarantee of work or exclusivity<\/h1>/)
+})
+
+test('compile html embeds default css when includeCss is enabled', () => {
+  const result = compile(VALID_SOURCE, 'html', { includeCss: true })
+  assert.equal(result.success, true)
+  assert.match(result.output, /<style>/)
+  assert.match(result.output, /\.output-pane h1\{/)
+})
+
+test('custom style profile override updates generated css', () => {
+  const result = compile(VALID_SOURCE, 'html', {
+    includeCss: true,
+    styleProfile: {
+      tokens: {
+        'font.body': 'Times New Roman'
+      }
+    }
+  })
+  assert.equal(result.success, true)
+  assert.match(result.output, /Times New Roman/)
+})
+
+test('invalid style profile emits warning diagnostics and falls back', () => {
+  const result = compile(VALID_SOURCE, 'html', {
+    includeCss: true,
+    styleProfile: {
+      tokens: 'invalid'
+    }
+  })
+  assert.equal(result.success, true)
+  assert.ok(result.diagnostics.some((d) => d.code === DiagnosticCodes.STYLE_PROFILE))
+  assert.match(result.output, /font-family:Arial/)
+})
+
+test('renderHtml helper proxies compile with options', () => {
+  const result = renderHtml(VALID_SOURCE, { includeCss: true })
+  assert.equal(result.success, true)
+  assert.match(result.output, /<html/i)
+  assert.match(result.output, /<style>/)
+})
+
+test('validateStyleProfile reports unsupported keys', () => {
+  const diagnostics = validateStyleProfile({
+    tokens: {
+      unknownToken: 'value'
+    }
+  })
+  assert.ok(diagnostics.length > 0)
+})
+
+test('styleProfileToCss renders supported selectors', () => {
+  const css = styleProfileToCss({})
+  assert.match(css, /\.output-pane h2\{/)
+  assert.match(css, /\.output-pane p\{/)
 })
 
 test('invalid syntax returns syntax diagnostics', () => {
