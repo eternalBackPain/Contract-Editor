@@ -3,8 +3,7 @@ import ActivityPane from './components/ActivityPane'
 import EditorPane from './components/EditorPane'
 import ExplorerPanel from './components/ExplorerPanel'
 import OutputPane from './components/OutputPane'
-import { parseToXML } from './lib/parseToXml'
-import { XMLtoHTML } from './lib/XMLToHTML'
+import { compile } from '@contract-editor/core'
 import { WORKSPACE_THEME_METRICS } from './lib/theme'
 import { loadWorkspaceLayoutPrefs, saveWorkspaceLayoutPrefs } from './lib/workspacePrefs'
 
@@ -31,6 +30,41 @@ function countWords(text = '') {
   return trimmed.split(/\s+/).length
 }
 
+function escapeHtml(text) {
+  if (typeof text !== 'string') return ''
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function diagnosticsToPreviewHtml(diagnostics) {
+  if (!Array.isArray(diagnostics) || diagnostics.length === 0) return ''
+
+  const items = diagnostics
+    .map((diagnostic) => {
+      const code = escapeHtml(diagnostic?.code || 'UNKNOWN')
+      const message = escapeHtml(diagnostic?.message || 'Unknown error')
+      const severity = escapeHtml(diagnostic?.severity || 'error')
+      const line = Number.isFinite(diagnostic?.line) ? diagnostic.line : 0
+      const column = Number.isFinite(diagnostic?.column) ? diagnostic.column : 0
+      const location = line > 0 ? `Line ${line}, Column ${column + 1}` : 'Unknown location'
+
+      return [
+        '<li style="list-style:none; margin:0 0 8px;">',
+        `<p style="margin:0 0 6px;"><strong>${code}</strong> ${severity.toUpperCase()}</p>`,
+        `<p style="margin:0 0 6px;">${message}</p>`,
+        `<p style="margin:0;">${location}</p>`,
+        '</li>'
+      ].join('')
+    })
+    .join('')
+
+  return `<ol style="margin:0; padding:0;">${items}</ol>`
+}
+
 function App() {
   const [initialLayoutPrefs] = useState(() => loadWorkspaceLayoutPrefs())
   const [editorText, setEditorText] = useState(INITIAL_EDITOR_TEXT)
@@ -53,9 +87,8 @@ function App() {
 
   async function handleOnChange(value) {
     setEditorText(value)
-    const xml = await parseToXML(value)
-    const html = await XMLtoHTML(xml)
-    setHTMLText(html)
+    const result = compile(value, 'html')
+    setHTMLText(result.success ? result.output : diagnosticsToPreviewHtml(result.diagnostics))
   }
 
   const handleSaveCurrentFile = useCallback(async () => {

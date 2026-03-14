@@ -4,7 +4,6 @@ import { electronAPI } from '@electron-toolkit/preload'
 let projectWatchListener = null
 
 const api = {
-  transformXmlToHtml: (xmlString) => ipcRenderer.invoke('xml-to-html', xmlString),
   openProjectFolder: () => ipcRenderer.invoke('open-project-folder'),
   listChildren: (dirPath) => ipcRenderer.invoke('list-children', dirPath),
   readFile: (filePath) => ipcRenderer.invoke('read-file', filePath),
@@ -15,7 +14,8 @@ const api = {
     ipcRenderer.invoke('explorer-action', { action: 'create-folder', targetPath, name }),
   renamePath: (targetPath, name) =>
     ipcRenderer.invoke('explorer-action', { action: 'rename', targetPath, name }),
-  deletePath: (targetPath) => ipcRenderer.invoke('explorer-action', { action: 'delete', targetPath }),
+  deletePath: (targetPath) =>
+    ipcRenderer.invoke('explorer-action', { action: 'delete', targetPath }),
   watchProject: (callback) => {
     if (projectWatchListener) {
       ipcRenderer.removeListener('project-watch-event', projectWatchListener)

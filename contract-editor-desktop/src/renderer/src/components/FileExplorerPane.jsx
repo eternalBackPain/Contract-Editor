@@ -62,7 +62,8 @@ function FileExplorerPane({ onFileSelect, selectedFilePath = '', onProjectOpened
 
   useEffect(() => {
     if (!focusedPath || !containerRef.current) return
-    const escapedPath = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(focusedPath) : focusedPath
+    const escapedPath =
+      typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(focusedPath) : focusedPath
     const el = containerRef.current.querySelector(`[data-path="${escapedPath}"]`)
     if (el) {
       el.scrollIntoView({ block: 'nearest' })
@@ -103,7 +104,7 @@ function FileExplorerPane({ onFileSelect, selectedFilePath = '', onProjectOpened
   }
 
   function beginCreate(mode, folderPath) {
-    const defaultName = mode === 'folder' ? 'new-folder' : 'untitled.txt'
+    const defaultName = mode === 'folder' ? 'new-folder' : 'untitled.contract'
     setInlineEdit({ mode, parentPath: folderPath, tempPath: `__inline__:${mode}:${folderPath}` })
     setInlineValue(defaultName)
     setFocusedPath(folderPath)

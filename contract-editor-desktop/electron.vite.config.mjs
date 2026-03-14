@@ -13,8 +13,7 @@ export default defineConfig({
   renderer: {
     resolve: {
       alias: {
-        '@renderer': resolve('src/renderer/src'),
-        // 'saxon-js': resolve(__dirname, 'node_modules/saxon-js/SaxonJS2N.js')
+        '@renderer': resolve('src/renderer/src')
       }
     },
     plugins: [react(), tailwindcss()]

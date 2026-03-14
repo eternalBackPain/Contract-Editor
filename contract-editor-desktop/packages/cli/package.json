@@ -1,0 +1,19 @@
+{
+  "name": "@contract-editor/cli",
+  "version": "1.0.0",
+  "description": "CLI for Contract Editor markup",
+  "type": "module",
+  "bin": {
+    "contractc": "./bin/contractc.js"
+  },
+  "files": [
+    "bin"
+  ],
+  "scripts": {
+    "build": "node -e \"console.log('cli build: no-op')\"",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@contract-editor/core": "file:../core"
+  }
+}

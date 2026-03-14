@@ -1,34 +1,59 @@
 # contract-editor-desktop
 
-An Electron application with React
+Electron desktop app for writing Contract Editor markup, now structured as a small monorepo.
 
-## Recommended IDE Setup
+## Packages
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+- `@contract-editor/core`: parser/validator/compiler for Contract Editor markup.
+- `@contract-editor/cli`: command line tool (`contractc`) for validate/compile workflows.
+- `contract-editor-desktop` (root package): Electron app consuming `@contract-editor/core`.
 
-## Project Setup
+## Source File Compatibility
 
-### Install
+- Preferred extension: `.contract`
+- Supported for compatibility: `.txt`
 
-```bash
-$ npm install
-```
-
-### Development
-
-```bash
-$ npm run dev
-```
-
-### Build
+## Install
 
 ```bash
-# For windows
-$ npm run build:win
-
-# For macOS
-$ npm run build:mac
-
-# For Linux
-$ npm run build:linux
+npm install
 ```
+
+## Desktop App
+
+```bash
+npm run dev
+npm run lint
+npm run build
+```
+
+## Core + CLI Tests
+
+```bash
+npm run test:core
+npm run test:cli
+npm run test
+```
+
+## CLI Usage
+
+```bash
+# validate
+npx contractc validate ./examples/sample.contract
+
+# compile to XML
+npx contractc compile ./examples/sample.contract --to xml
+
+# compile to HTML file
+npx contractc compile ./examples/sample.contract --to html --out ./dist/sample.html
+```
+
+`contractc` accepts `.contract` and `.txt` input files.
+
+## Electron Smoke Test
+
+`ash
+npm run test:smoke
+`
+
+This builds the app, launches Electron, verifies preview renders, and verifies editor updates propagate to preview.

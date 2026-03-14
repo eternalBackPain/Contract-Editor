@@ -10,7 +10,6 @@ import {
   watch,
   writeFileSync
 } from 'fs'
-import SaxonJS from 'saxon-js'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 
@@ -234,32 +233,6 @@ const template = [
   }
 ]
 
-const sefRelativePath = join('resources', 'xslt', 'xml-to-html.sef.json')
-let sefCache = null
-
-function resolveSefPath() {
-  const candidates = [
-    join(process.resourcesPath, 'xslt', 'xml-to-html.sef.json'),
-    join(process.resourcesPath, sefRelativePath),
-    join(app.getAppPath(), sefRelativePath),
-    join(__dirname, '../renderer/assets/xml-to-html.sef.json'),
-    join(process.cwd(), 'src', 'renderer', 'src', 'lib', 'xslt', 'xml-to-html.sef.json'),
-    join(process.cwd(), 'contract-editor-desktop', 'src', 'renderer', 'src', 'lib', 'xslt', 'xml-to-html.sef.json')
-  ]
-  for (const candidate of candidates) {
-    if (existsSync(candidate)) return candidate
-  }
-  throw new Error('SaxonJS SEF not found. Tried: ' + candidates.join(', '))
-}
-
-function getSefText() {
-  if (!sefCache) {
-    const sefPath = resolveSefPath()
-    sefCache = readFileSync(sefPath, 'utf-8')
-  }
-  return sefCache
-}
-
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 900,
@@ -289,23 +262,9 @@ function createWindow() {
   }
 }
 
-ipcMain.handle('xml-to-html', async (_event, xmlString) => {
-  if (!xmlString || typeof xmlString !== 'string') return ''
-  try {
-    const result = SaxonJS.transform({
-      stylesheetText: getSefText(),
-      sourceText: xmlString,
-      destination: 'serialized'
-    })
-    return result.principalResult || ''
-  } catch (error) {
-    console.error('XML transform failed', error)
-    throw error
-  }
-})
-
 ipcMain.handle('open-project-folder', async (event) => {
-  const targetWindow = BrowserWindow.fromWebContents(event.sender) || BrowserWindow.getFocusedWindow()
+  const targetWindow =
+    BrowserWindow.fromWebContents(event.sender) || BrowserWindow.getFocusedWindow()
   if (!targetWindow) return null
   return openProjectFolder(targetWindow)
 })
@@ -325,8 +284,9 @@ ipcMain.handle('read-file', async (_event, filePath) => {
 ipcMain.handle('write-file', async (_event, filePath, content) => {
   if (!filePath || typeof filePath !== 'string') return false
   assertInActiveRoot(filePath)
-  if (extname(filePath).toLowerCase() !== '.txt') {
-    throw new Error('Only .txt files are supported')
+  const extension = extname(filePath).toLowerCase()
+  if (extension !== '.txt' && extension !== '.contract') {
+    throw new Error('Only .contract and .txt files are supported')
   }
   writeFileSync(filePath, typeof content === 'string' ? content : '', 'utf-8')
   return true
@@ -341,7 +301,7 @@ ipcMain.handle('explorer-action', async (_event, payload) => {
   assertInActiveRoot(targetPath)
 
   if (action === 'create-file') {
-    const nextPath = join(targetPath, name || 'untitled.txt')
+    const nextPath = join(targetPath, name || 'untitled.contract')
     assertInActiveRoot(nextPath)
     writeFileSync(nextPath, '', 'utf-8')
     return { path: nextPath }
