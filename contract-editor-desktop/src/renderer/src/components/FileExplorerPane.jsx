@@ -32,6 +32,7 @@ function FileExplorerPane({ onFileSelect, selectedFilePath = '', onProjectOpened
     toggleFolder,
     refreshFolder,
     collapseAll,
+    expandAll,
     createAt,
     renamePath,
     deletePath
@@ -236,13 +237,6 @@ function FileExplorerPane({ onFileSelect, selectedFilePath = '', onProjectOpened
     setFocusedPath(path)
   }
 
-  async function handleRefresh() {
-    if (!projectRoot?.path) return
-    const node = nodeMap[focusedPath] || nodeMap[projectRoot.path]
-    const folderPath = parentOrSelfFolder(node, projectRoot.path)
-    await refreshFolder(folderPath)
-  }
-
   function handleNewFile() {
     if (!projectRoot?.path) return
     const node = nodeMap[focusedPath] || nodeMap[projectRoot.path]
@@ -290,8 +284,8 @@ function FileExplorerPane({ onFileSelect, selectedFilePath = '', onProjectOpened
           <button type="button" className="explorer-action-button" onClick={handleNewFolder}>
             New Folder
           </button>
-          <button type="button" className="explorer-action-button" onClick={handleRefresh}>
-            Refresh
+          <button type="button" className="explorer-action-button" onClick={expandAll}>
+            Expand All
           </button>
           <button type="button" className="explorer-action-button" onClick={collapseAll}>
             Collapse All

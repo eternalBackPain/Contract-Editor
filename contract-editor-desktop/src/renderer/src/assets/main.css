@@ -503,19 +503,14 @@ input {
 .explorer-empty-state {
   width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 16px;
+  padding: 12px;
 }
 
 .explorer-empty-title {
-  margin: 0;
-  color: #223f44;
-  font-size: 14px;
-  font-weight: 600;
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1f2e34;
 }
 
 .explorer-empty-filter {
@@ -630,4 +625,3 @@ input {
     transform: translateY(-4px) scale(0.98);
   }
 }
-

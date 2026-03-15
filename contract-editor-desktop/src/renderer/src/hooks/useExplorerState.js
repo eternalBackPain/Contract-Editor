@@ -184,6 +184,37 @@ export function useExplorerState({ openFilePath = '', onOpenFile }) {
     setFocusedPath(projectRoot.path)
   }, [projectRoot])
 
+  const expandAll = useCallback(async () => {
+    if (!projectRoot?.path) return
+
+    const nextExpanded = new Set([projectRoot.path])
+    const queue = [projectRoot.path]
+    const visited = new Set()
+
+    while (queue.length > 0) {
+      const folderPath = queue.shift()
+      if (!folderPath || visited.has(folderPath)) continue
+      visited.add(folderPath)
+
+      const folder = nodeMapRef.current[folderPath]
+      if (!folder || folder.type !== 'folder') continue
+
+      await loadChildren(folderPath)
+
+      const refreshed = nodeMapRef.current[folderPath]
+      for (const childPath of refreshed?.childPaths || []) {
+        const childNode = nodeMapRef.current[childPath]
+        if (childNode?.type === 'folder') {
+          nextExpanded.add(childPath)
+          queue.push(childPath)
+        }
+      }
+    }
+
+    setExpandedPaths(nextExpanded)
+    setFocusedPath(projectRoot.path)
+  }, [loadChildren, projectRoot])
+
   const refreshFolder = useCallback(
     async (folderPath) => {
       if (!folderPath) return
@@ -542,6 +573,7 @@ export function useExplorerState({ openFilePath = '', onOpenFile }) {
     toggleFolder,
     refreshFolder,
     collapseAll,
+    expandAll,
     createAt,
     renamePath,
     deletePath,
