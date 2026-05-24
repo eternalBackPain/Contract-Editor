@@ -1,4 +1,4 @@
-// Generated from c:/Users/johnn/Documents/GitHub/Contract-Editor/contract-editor-desktop/src/renderer/src/lib/formal-grammar/ContractsParser.g4 by ANTLR 4.13.1
+// Generated from c:/Users/johnn/Documents/GitHub/Contract-Editor/contract-editor-desktop/packages/core/src/formal-grammar/ContractsParser.g4 by ANTLR 4.13.1
 // jshint ignore: start
 import antlr4 from 'antlr4';
 

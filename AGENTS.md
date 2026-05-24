@@ -1,16 +1,18 @@
 # AGENTS.md
 
 ## Scope and Repository Boundaries
-- Primary codebase: `contract-editor-desktop`.
-- Treat `contract-editor` as out of scope unless the user explicitly asks to work there.
+- Sole application codebase: `contract-editor-desktop`.
+- Keep changes focused in `contract-editor-desktop` unless the user explicitly asks to update repository-level documentation or configuration.
 
 ## Project Overview
 - `contract-editor-desktop` is an Electron desktop app for drafting contracts with a split editor/preview workflow.
-- Stack: Electron + Vite + React, with parser/transform logic in the renderer and IPC bridge through preload.
+- Stack: Electron + Vite + React, with shared parser/transform logic in `packages/core` and IPC bridge through preload.
 - Process boundaries:
   - `src/main`: Electron main process, native APIs, filesystem access, IPC handlers.
   - `src/preload`: safe API surface exposed to the renderer via `contextBridge`.
-  - `src/renderer`: React UI, editor experience, parsing and rendering orchestration.
+  - `src/renderer`: React UI, editor experience, and rendering orchestration.
+  - `packages/core`: shared parser/validator/compiler logic consumed by the renderer and CLI.
+  - `packages/cli`: `contractc` command line workflows built on `packages/core`.
 
 ## Implementation Philosophy
 - Implement the most minimal version of a feature first unless the user explicitly asks for additional capability.

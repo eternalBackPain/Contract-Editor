@@ -25,6 +25,16 @@
       "presentation": {
         "hidden": true
       }
+    },
+    {
+      "name": "Debug Contracts Grammar",
+      "type": "antlr-debug",
+      "request": "launch",
+      "input": "examples/sample.contract",
+      "grammar": "packages/core/src/formal-grammar/ContractsParser.g4",
+      "startRule": "start",
+      "printParseTree": true,
+      "visualParseTree": true
     }
   ],
   "compounds": [

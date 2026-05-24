@@ -1,16 +1,15 @@
 {
-    "version": "2.0.0",
-    "configurations": [
-        
-        {
-            "name": "Debug ANTLR4 grammar",
-            "type": "antlr-debug",
-            "request": "launch",
-            "input": "contract-editor/lib/formal-grammar/input.txt",
-            "grammar": "contract-editor/lib/formal-grammar/ContractsParser.g4",
-            "startRule": "start",
-            "printParseTree": true,
-            "visualParseTree": true
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "antlr-debug",
+      "request": "launch",
+      "name": "Debug Contracts Grammar",
+      "input": "contract-editor-desktop/examples/sample.contract",
+      "grammar": "contract-editor-desktop/packages/core/src/formal-grammar/ContractsParser.g4",
+      "startRule": "start",
+      "printParseTree": true,
+      "visualParseTree": true
+    }
+  ]
 }

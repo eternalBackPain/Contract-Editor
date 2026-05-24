@@ -63,10 +63,6 @@ Renderer UI lives in `src/renderer/src` with `App.jsx` and Monaco editor wiring.
 The parser/validator/compiler logic now lives in `packages/core` and is reused by both the Electron UI and the CLI in `packages/cli`.
 The renderer consumes this shared core package rather than owning a separate parser pipeline.
 
-### Legacy web app
-
-`contract-editor/` remains in the repository as a legacy/experimental Next.js app and is not the primary target for current desktop development.
-
 ## Mock-up
 
 ![Project Mock-up](<Contract Editor project wireframe.pdf>)
