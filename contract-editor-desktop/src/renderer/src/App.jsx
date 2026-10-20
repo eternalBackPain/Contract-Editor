@@ -194,7 +194,7 @@ function App() {
       await window.api.writeFile(activeFilePath, editorText)
       setDocuments((current) =>
         current.map((document) =>
-          document.path === activeFilePath ? { ...document, savedText: editorText } : document
+          document.id === activeDocument.id ? { ...document, savedText: editorText } : document
         )
       )
       setSaveError('')
@@ -210,7 +210,7 @@ function App() {
       console.error('Failed to save file:', error)
       setSaveError(`Could not save ${currentFileLabel}: ${error.message}`)
     }
-  }, [activeDocument?.deleted, activeFilePath, currentFileLabel, editorText])
+  }, [activeDocument, activeFilePath, currentFileLabel, editorText])
 
   useEffect(() => {
     if (!window.api?.onMenuSave) return undefined
@@ -246,7 +246,7 @@ function App() {
     setDocuments((current) =>
       current.some((document) => document.path === path)
         ? current
-        : [...current, { id: path, path, text: content, savedText: content }]
+        : [...current, { id: crypto.randomUUID(), path, text: content, savedText: content }]
     )
     setActiveFilePath(path)
   }
@@ -274,12 +274,11 @@ function App() {
     // Keep deleted drafts in memory, but detach them from disk to prevent accidental recreation.
     setDocuments((current) =>
       current.map((item) =>
-        matches(item) ? { ...item, path: `deleted:${item.id}`, deleted: true } : item
+        matches(item) ? { ...item, path: `deleted:${item.path}`, deleted: true } : item
       )
     )
     if (matches({ path: activeFilePath })) {
-      const document = documents.find((item) => item.path === activeFilePath)
-      setActiveFilePath(`deleted:${document.id}`)
+      setActiveFilePath(`deleted:${activeFilePath}`)
     }
   }
 
