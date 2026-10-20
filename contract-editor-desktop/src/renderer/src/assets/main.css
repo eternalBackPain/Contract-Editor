@@ -757,3 +757,32 @@ input {
 .status-button:hover {
   background: var(--state-hover);
 }
+
+.layout-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--surface-pane-muted);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.layout-toolbar button {
+  padding: 4px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  font-size: 11px;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.layout-toolbar [aria-pressed='true'] {
+  background: var(--state-active);
+}
+.layout-toolbar button:focus-visible,
+.workspace-resizer:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+.workspace-shell.is-zen .activity-bar {
+  display: none;
+}
