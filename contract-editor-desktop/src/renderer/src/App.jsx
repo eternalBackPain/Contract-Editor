@@ -4,6 +4,7 @@ import EditorPane from './components/EditorPane'
 import ExplorerPanel from './components/ExplorerPanel'
 import OutputPane from './components/OutputPane'
 import QuickOpen from './components/QuickOpen'
+import { monaco } from './monaco'
 import {
   compile,
   getDefaultStyleProfile,
@@ -109,6 +110,41 @@ function App() {
   const [saveError, setSaveError] = useState('')
   const [projectRoot, setProjectRoot] = useState(null)
   const [showQuickOpen, setShowQuickOpen] = useState(false)
+  const editorRef = useRef(null)
+  const [cursorStatus, setCursorStatus] = useState({ line: 1, column: 1, selected: 0 })
+  const [wordWrap, setWordWrap] = useState(true)
+
+  const handleEditorReady = useCallback((editor) => {
+    editorRef.current = editor
+    const selection = editor.onDidChangeCursorSelection((event) => {
+      const position = editor.getPosition()
+      setCursorStatus({
+        line: position?.lineNumber || 1,
+        column: position?.column || 1,
+        selected: editor.getModel()?.getValueLengthInRange(event.selection) || 0
+      })
+    })
+    const config = editor.onDidChangeConfiguration(() => {
+      setWordWrap(editor.getOption(monaco.editor.EditorOption.wordWrap) !== 'off')
+    })
+    return () => {
+      selection.dispose()
+      config.dispose()
+      editorRef.current = null
+    }
+  }, [])
+
+  function runEditorAction(id) {
+    const editor = editorRef.current
+    editor?.focus()
+    void editor?.getAction(id)?.run()
+  }
+
+  function toggleWordWrap() {
+    const editor = editorRef.current
+    editor?.updateOptions({ wordWrap: wordWrap ? 'off' : 'on' })
+    editor?.focus()
+  }
   const [HTMLText, setHTMLText] = useState('')
   const [styleProfileOverride, setStyleProfileOverride] = useState(initialStyleOverride)
   const [styleDraftText, setStyleDraftText] = useState(() => formatStyleDraft(initialStyleOverride))
@@ -499,8 +535,49 @@ function App() {
                 {saveError}
               </p>
             )}
+            <div className="editor-toolbar" role="toolbar" aria-label="Text editing">
+              <button
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => runEditorAction('actions.find')}
+                title="Find (Ctrl+F / Cmd+F)"
+              >
+                Find
+              </button>
+              <button
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => runEditorAction('editor.action.startFindReplaceAction')}
+                title="Replace (Ctrl+H / Cmd+Option+F)"
+              >
+                Replace
+              </button>
+              <button
+                type="button"
+                onClick={() => runEditorAction('editor.action.gotoLine')}
+                title="Go to Line (Ctrl+G)"
+              >
+                Go to Line
+              </button>
+              <button
+                type="button"
+                onClick={() => runEditorAction('editor.action.quickCommand')}
+                title="Editor Commands (F1)"
+              >
+                Commands
+              </button>
+              <button
+                type="button"
+                aria-pressed={wordWrap}
+                onClick={toggleWordWrap}
+                title="Toggle Word Wrap (Alt+Z / Option+Z)"
+              >
+                Word Wrap
+              </button>
+            </div>
             <div className="pane-body">
               <EditorPane
+                onReady={handleEditorReady}
                 onChange={handleOnChange}
                 value={editorText}
                 key={editorSession}
@@ -544,6 +621,15 @@ function App() {
       <footer className="workspace-status-bar">
         <span>{currentFileLabel}</span>
         <span>{wordCount} words</span>
+        <button
+          type="button"
+          className="status-button"
+          onClick={() => runEditorAction('editor.action.gotoLine')}
+          title="Go to Line"
+        >
+          Ln {cursorStatus.line}, Col {cursorStatus.column}
+          {cursorStatus.selected ? ` (${cursorStatus.selected} selected)` : ''}
+        </button>
         <span>{saveLabel}</span>
       </footer>
     </div>
