@@ -55,6 +55,7 @@ function isSameOrChildPath(path, rootPath) {
 
 export function useExplorerState({ openFilePath = '', onOpenFile }) {
   const [projectRoot, setProjectRoot] = useState(null)
+  const [error, setError] = useState('')
   const [nodeMap, setNodeMap] = useState({})
   const [expandedPaths, setExpandedPaths] = useState(() => new Set())
   const [focusedPath, setFocusedPath] = useState('')
@@ -229,11 +230,14 @@ export function useExplorerState({ openFilePath = '', onOpenFile }) {
       if (!window.api?.readFile || !filePath) return
       const node = nodeMapRef.current[filePath]
       if (!node || node.type !== 'file') return
-      const content = await window.api.readFile(filePath)
-      if (onOpenFile) {
-        onOpenFile(content, node)
+      setError('')
+      try {
+        const content = await window.api.readFile(filePath)
+        onOpenFile?.(content, node)
+        setFocusedPath(filePath)
+      } catch (error) {
+        setError(`Could not open ${node.name}: ${error.message}`)
       }
-      setFocusedPath(filePath)
     },
     [onOpenFile]
   )
@@ -243,6 +247,7 @@ export function useExplorerState({ openFilePath = '', onOpenFile }) {
     const snapshotExpanded = expandedPathsRef.current
     const snapshotFocused = focusedPathRef.current
 
+    setError('')
     applyMutation()
 
     try {
@@ -250,6 +255,7 @@ export function useExplorerState({ openFilePath = '', onOpenFile }) {
       return true
     } catch (error) {
       console.error('Explorer mutation failed:', error)
+      setError(`Could not update files: ${error.message}`)
       setNodeMap(snapshotMap)
       setExpandedPaths(snapshotExpanded)
       setFocusedPath(snapshotFocused)
@@ -358,8 +364,9 @@ export function useExplorerState({ openFilePath = '', onOpenFile }) {
               }
             }
 
-            const parent = next[parentPath]
+            const parent = next[parentPath] && { ...next[parentPath] }
             if (parent?.type === 'folder') {
+              next[parentPath] = parent
               parent.childPaths = (parent.childPaths || []).map((path) =>
                 path === targetPath ? nextPath : path
               )
@@ -411,8 +418,9 @@ export function useExplorerState({ openFilePath = '', onOpenFile }) {
           setNodeMap((prev) => {
             const next = { ...prev }
             removeSubtree(next, targetPath)
-            const parent = next[parentPath]
+            const parent = next[parentPath] && { ...next[parentPath] }
             if (parent?.type === 'folder') {
+              next[parentPath] = parent
               parent.childPaths = (parent.childPaths || []).filter(
                 (childPath) => childPath !== targetPath
               )
@@ -562,6 +570,7 @@ export function useExplorerState({ openFilePath = '', onOpenFile }) {
 
   return {
     projectRoot,
+    error,
     nodeMap,
     visibleRows,
     expandedPaths,

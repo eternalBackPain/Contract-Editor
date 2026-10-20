@@ -786,3 +786,60 @@ input {
 .workspace-shell.is-zen .activity-bar {
   display: none;
 }
+
+/* Keep controls reachable when panes or the window are small. */
+.pane-header {
+  height: auto;
+  min-height: 30px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  padding-block: 4px;
+}
+.pane-title {
+  flex: 1 1 80px;
+}
+.pane-header-button,
+.pane-meta {
+  flex-shrink: 0;
+}
+.pane-header-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.pane-header-button:disabled:hover {
+  background: #edf1f3;
+}
+.editor-toolbar {
+  flex-shrink: 0;
+}
+.document-tab {
+  max-width: min(240px, 100%);
+}
+.document-tab [role='tab'] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.workspace-status-bar > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.status-button {
+  flex-shrink: 0;
+}
+.formatting-pane {
+  overflow-y: auto;
+}
+.formatting-pane > * {
+  flex-shrink: 0;
+}
+.formatting-json-input {
+  flex-shrink: 0;
+}
+.quick-open-results [role='option'] > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

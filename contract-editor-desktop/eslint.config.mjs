@@ -27,5 +27,12 @@ export default [
       ...eslintPluginReactRefresh.configs.vite.rules
     }
   },
+  {
+    files: ['src/renderer/**/*.{js,jsx}'],
+    rules: {
+      // React 19 removed runtime PropTypes checks for function components.
+      'react/prop-types': 'off'
+    }
+  },
   eslintConfigPrettier
 ]

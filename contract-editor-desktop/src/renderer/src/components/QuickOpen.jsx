@@ -98,6 +98,7 @@ export default function QuickOpen({ root, onSelect, onClose }) {
       aria-label="Quick Open"
       onCancel={onClose}
       onKeyDown={(event) => {
+        if (event.target.getAttribute('role') !== 'combobox') return
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
           event.preventDefault()
           setSelected((index) =>

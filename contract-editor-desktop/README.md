@@ -52,9 +52,9 @@ npx contractc compile ./examples/sample.contract --to html --out ./dist/sample.h
 
 ## Electron Smoke Test
 
-`ash
+```bash
 npm run test:smoke
-`
+```
 
 This builds the app, launches Electron, verifies preview renders, and verifies editor updates propagate to preview.
 
@@ -95,3 +95,23 @@ selected character count; clicking the position opens Go to Line.
   double-click it to restore its default size. Pane sizes adapt when the window resizes.
 
 Sidebar/preview visibility and pane widths persist between sessions. Zen Mode is temporary.
+
+## Keyboard and compact layouts
+
+Use Left/Right, Home, and End on a draft tab to switch drafts. Tab moves to the
+active draft tab; Quick Open restores focus when dismissed. Explorer shortcuts
+apply to the tree, leaving typing and text navigation in its filter unaffected.
+Formatting reports invalid JSON accessibly and scrolls to keep its actions reachable
+in short windows. Long draft names are truncated; hover a tab for the full path.
+
+File creation and rename reject existing destination names to preserve their contents.
+Explorer operation failures appear inline. New names must be a single file or folder
+name without path separators.
+
+## Lint configuration
+
+The renderer uses React 19, which no longer runs function-component PropTypes
+checks. Its lint configuration disables the legacy `react/prop-types` rule while
+retaining the remaining React, Hooks, and formatting checks. Formatting follows
+`.editorconfig` and `.prettierrc.yaml`. The application-level `.gitattributes`
+keeps text files on LF line endings after Git checkout.

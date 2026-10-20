@@ -300,10 +300,22 @@ ipcMain.handle('explorer-action', async (_event, payload) => {
 
   assertInActiveRoot(targetPath)
 
+  if (['create-file', 'create-folder', 'rename'].includes(action)) {
+    if (
+      typeof name !== 'string' ||
+      !name.trim() ||
+      name === '.' ||
+      name === '..' ||
+      /[\\/]/.test(name)
+    ) {
+      throw new Error('Enter a file or folder name without path separators')
+    }
+  }
+
   if (action === 'create-file') {
     const nextPath = join(targetPath, name || 'untitled.contract')
     assertInActiveRoot(nextPath)
-    writeFileSync(nextPath, '', 'utf-8')
+    writeFileSync(nextPath, '', { encoding: 'utf-8', flag: 'wx' })
     return { path: nextPath }
   }
 
@@ -321,6 +333,10 @@ ipcMain.handle('explorer-action', async (_event, payload) => {
     const parentPath = dirname(targetPath)
     const nextPath = join(parentPath, name)
     assertInActiveRoot(nextPath)
+    if (targetPath === nextPath) return { path: nextPath }
+    if (existsSync(nextPath) && normalizePath(targetPath) !== normalizePath(nextPath)) {
+      throw new Error('A file or folder with that name already exists')
+    }
     renameSync(targetPath, nextPath)
     return { path: nextPath }
   }

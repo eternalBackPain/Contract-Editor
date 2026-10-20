@@ -24,6 +24,7 @@ function FileExplorerPane({
 }) {
   const {
     projectRoot,
+    error,
     nodeMap,
     visibleRows,
     expandedPaths,
@@ -167,6 +168,7 @@ function FileExplorerPane({
 
   async function handleKeyDown(event) {
     if (!projectRoot?.path) return
+    if (event.target.closest('input, textarea, button')) return
     if (inlineEdit && event.key !== 'Escape') return
 
     const currentRow = visibleRows[focusedIndex]
@@ -310,11 +312,17 @@ function FileExplorerPane({
         <input
           className="explorer-filter"
           placeholder="Filter files"
+          aria-label="Filter files"
           value={filterQuery}
           onChange={(event) => setFilterQuery(event.target.value)}
         />
       </div>
 
+      {error && (
+        <p className="workspace-error" role="alert">
+          {error}
+        </p>
+      )}
       <div
         ref={containerRef}
         className="explorer-tree"

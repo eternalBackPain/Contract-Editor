@@ -3,6 +3,7 @@
  * @property {number} defaultExplorerWidth
  * @property {number} minExplorerWidth
  * @property {number} maxExplorerWidth
+ * @property {number} dividerWidth
  * @property {number} minPaneWidth
  */
 
@@ -11,6 +12,7 @@ export const WORKSPACE_THEME_METRICS = Object.freeze({
   defaultExplorerWidth: 260,
   minExplorerWidth: 190,
   maxExplorerWidth: 460,
+  dividerWidth: 6,
   minPaneWidth: 280
 })
 

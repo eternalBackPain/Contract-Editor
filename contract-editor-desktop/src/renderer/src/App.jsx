@@ -111,11 +111,23 @@ function App() {
   const [projectRoot, setProjectRoot] = useState(null)
   const [showQuickOpen, setShowQuickOpen] = useState(false)
   const editorRef = useRef(null)
+  const tabsRef = useRef(null)
+
+  useEffect(() => {
+    tabsRef.current
+      ?.querySelector('[aria-selected="true"]')
+      ?.closest('.document-tab')
+      ?.scrollIntoView({
+        block: 'nearest',
+        inline: 'nearest'
+      })
+  }, [activeFilePath])
   const [cursorStatus, setCursorStatus] = useState({ line: 1, column: 1, selected: 0 })
   const [wordWrap, setWordWrap] = useState(true)
 
   const handleEditorReady = useCallback((editor) => {
     editorRef.current = editor
+    setWordWrap(editor.getOption(monaco.editor.EditorOption.wordWrap) !== 'off')
     const selection = editor.onDidChangeCursorSelection((event) => {
       const position = editor.getPosition()
       setCursorStatus({
@@ -162,10 +174,11 @@ function App() {
   const escapeRef = useRef(0)
   const visiblePreview = showPreview && !zenMode
   const visibleExplorer = showExplorer && !zenMode
-  const minEditorWidth = Math.min(WORKSPACE_THEME_METRICS.minPaneWidth, groupWidth / 2)
+  const availablePaneWidth = Math.max(0, groupWidth - WORKSPACE_THEME_METRICS.dividerWidth)
+  const minEditorWidth = Math.min(WORKSPACE_THEME_METRICS.minPaneWidth, availablePaneWidth / 2)
   const effectiveEditorWidth = Math.max(
     minEditorWidth,
-    Math.min(editorWidth ?? groupWidth / 2, groupWidth - minEditorWidth)
+    Math.min(editorWidth ?? availablePaneWidth / 2, availablePaneWidth - minEditorWidth)
   )
 
   useEffect(() => {
@@ -451,7 +464,7 @@ function App() {
       const startExplorer = explorerWidth
       const bounds = editorOutputRef.current?.getBoundingClientRect()
       if (!bounds) return
-      const startEditor = editorWidth ?? Math.floor(bounds.width / 2)
+      const startEditor = effectiveEditorWidth
 
       document.body.style.userSelect = 'none'
       document.body.style.cursor = 'col-resize'
@@ -469,8 +482,9 @@ function App() {
           return
         }
         if (kind === 'editor') {
-          const min = Math.min(WORKSPACE_THEME_METRICS.minPaneWidth, bounds.width / 2)
-          const max = bounds.width - min
+          const available = Math.max(0, bounds.width - WORKSPACE_THEME_METRICS.dividerWidth)
+          const min = Math.min(WORKSPACE_THEME_METRICS.minPaneWidth, available / 2)
+          const max = available - min
           setEditorWidth(clamp(startEditor + dx, min, max))
         }
       }
@@ -492,7 +506,9 @@ function App() {
     event.preventDefault()
     const explorer = kind === 'explorer'
     const min = explorer ? WORKSPACE_THEME_METRICS.minExplorerWidth : minEditorWidth
-    const max = explorer ? WORKSPACE_THEME_METRICS.maxExplorerWidth : groupWidth - minEditorWidth
+    const max = explorer
+      ? WORKSPACE_THEME_METRICS.maxExplorerWidth
+      : availablePaneWidth - minEditorWidth
     const current = explorer ? explorerWidth : effectiveEditorWidth
     const next =
       event.key === 'Home'
@@ -572,7 +588,10 @@ function App() {
       </div>
       <div className="workspace-main">
         <div className="activity-bar">
-          <ActivityPane active={activeExplorer} onSelect={handleActivitySelect} />
+          <ActivityPane
+            active={visibleExplorer ? activeExplorer : null}
+            onSelect={handleActivitySelect}
+          />
         </div>
         <div
           className="workspace-sidebar"
@@ -637,13 +656,36 @@ function App() {
                 Save
               </button>
             </header>
-            <div className="document-tabs" role="tablist" aria-label="Open drafts">
+            <div ref={tabsRef} className="document-tabs" role="tablist" aria-label="Open drafts">
               {documents.map((document) => (
-                <div className="document-tab" key={document.path}>
+                <div className="document-tab" key={document.id}>
                   <button
                     type="button"
                     role="tab"
                     aria-selected={document.path === activeFilePath}
+                    tabIndex={document.path === activeFilePath ? 0 : -1}
+                    onKeyDown={(event) => {
+                      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+                      event.preventDefault()
+                      const index = documents.indexOf(document)
+                      const next =
+                        event.key === 'Home'
+                          ? 0
+                          : event.key === 'End'
+                            ? documents.length - 1
+                            : (index + (event.key === 'ArrowRight' ? 1 : -1) + documents.length) %
+                              documents.length
+                      setActiveFilePath(documents[next].path)
+                      const tab = event.currentTarget
+                        .closest('[role="tablist"]')
+                        .querySelectorAll('[role="tab"]')[next]
+                      requestAnimationFrame(() => {
+                        tab.focus()
+                        tab
+                          .closest('.document-tab')
+                          .scrollIntoView({ block: 'nearest', inline: 'nearest' })
+                      })
+                    }}
                     title={document.path || 'Untitled draft'}
                     onClick={() => setActiveFilePath(document.path)}
                   >
@@ -724,7 +766,7 @@ function App() {
               aria-label="Resize Editor and Preview"
               aria-orientation="vertical"
               aria-valuemin={Math.round(minEditorWidth)}
-              aria-valuemax={Math.round(groupWidth - minEditorWidth)}
+              aria-valuemax={Math.round(availablePaneWidth - minEditorWidth)}
               aria-valuenow={Math.round(effectiveEditorWidth)}
               onKeyDown={(event) => resizeWithKeyboard('editor', event)}
               onDoubleClick={() => setEditorWidth(null)}

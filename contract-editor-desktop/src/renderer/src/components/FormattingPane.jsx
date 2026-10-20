@@ -15,6 +15,9 @@ function FormattingPane({
       </p>
       <textarea
         className="formatting-json-input"
+        aria-label="Style profile JSON"
+        aria-invalid={Boolean(parseError)}
+        aria-describedby={parseError ? 'formatting-error' : undefined}
         value={draftText}
         onChange={(event) => onDraftChange(event.target.value)}
         spellCheck={false}
@@ -28,13 +31,21 @@ function FormattingPane({
         </button>
       </div>
       {isUsingDefault ? (
-        <p className="formatting-status">Using core default style profile.</p>
+        <p className="formatting-status" role="status">
+          Using core default style profile.
+        </p>
       ) : (
-        <p className="formatting-status">Using custom style override.</p>
+        <p className="formatting-status" role="status">
+          Using custom style override.
+        </p>
       )}
-      {parseError ? <p className="formatting-error">{parseError}</p> : null}
+      {parseError ? (
+        <p id="formatting-error" className="formatting-error" role="alert">
+          {parseError}
+        </p>
+      ) : null}
       {diagnostics.length > 0 ? (
-        <ul className="formatting-diagnostics">
+        <ul className="formatting-diagnostics" aria-live="polite">
           {diagnostics.map((diagnostic, index) => (
             <li key={`${diagnostic.code}-${index}`}>{diagnostic.message}</li>
           ))}
