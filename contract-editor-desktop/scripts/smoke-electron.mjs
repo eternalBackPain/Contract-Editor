@@ -186,7 +186,26 @@ async function run() {
       'Editor fills group with preview hidden'
     )
     await window.getByRole('button', { name: 'Preview', exact: true }).click()
-    console.log('Electron smoke passed: preview, tabs, undo/save, Quick Open and editor controls.')
+    // Reusing a deleted path must create a new model, independent of the retained draft.
+    await writeFile(join(fixture, 'nested', 'renamed.contract'), SMOKE_SOURCE)
+    await window.getByRole('treeitem', { name: 'renamed.contract', exact: true }).click()
+    await window.waitForFunction(
+      () => document.querySelector('.output-document h1')?.textContent?.trim() === 'Smoke Title'
+    )
+    assert.equal(
+      await window.getByRole('tab', { name: 'renamed.contract', exact: true }).count(),
+      2
+    )
+    await window.getByRole('tab', { name: 'renamed.contract', exact: true }).first().click()
+    await window.waitForFunction(
+      () => document.querySelector('.output-document h1')?.textContent?.trim() === 'Revised Title'
+    )
+    if (process.env.CONTRACT_EDITOR_SMOKE_SCREENSHOT) {
+      await window.screenshot({ path: process.env.CONTRACT_EDITOR_SMOKE_SCREENSHOT })
+    }
+    console.log(
+      'Electron smoke passed: tabs, Quick Open, editing controls, layout and file lifecycle.'
+    )
   } finally {
     await app.close()
     await rm(fixture, { recursive: true, force: true })
