@@ -64,3 +64,12 @@ Opening files creates tabs. Switching tabs preserves unsaved text, undo history,
 selection and scroll position. Save the active file with Ctrl+S (Cmd+S on macOS)
 or the Save button. Closing a dirty tab, changing folders, or closing the window
 asks before discarding changes. Drafts are kept in memory for the current session.
+
+## Quick Open
+
+Press Ctrl+P (Cmd+P on macOS) or click Quick Open to find `.contract` and `.txt`
+files anywhere in the active folder, including collapsed directories. Type a
+name or relative path; matching allows skipped letters. Use Up/Down and Enter
+to open a result, or Escape to return to your draft. The search refreshes each
+time it opens, skips `.git` and `node_modules`, and asks for a smaller project
+when more than 10,000 entries would need scanning.

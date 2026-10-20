@@ -3,6 +3,7 @@ import ActivityPane from './components/ActivityPane'
 import EditorPane from './components/EditorPane'
 import ExplorerPanel from './components/ExplorerPanel'
 import OutputPane from './components/OutputPane'
+import QuickOpen from './components/QuickOpen'
 import {
   compile,
   getDefaultStyleProfile,
@@ -106,6 +107,8 @@ function App() {
   const lastSavedText = activeDocument?.savedText ?? ''
   const [editorSession, setEditorSession] = useState(0)
   const [saveError, setSaveError] = useState('')
+  const [projectRoot, setProjectRoot] = useState(null)
+  const [showQuickOpen, setShowQuickOpen] = useState(false)
   const [HTMLText, setHTMLText] = useState('')
   const [styleProfileOverride, setStyleProfileOverride] = useState(initialStyleOverride)
   const [styleDraftText, setStyleDraftText] = useState(() => formatStyleDraft(initialStyleOverride))
@@ -251,7 +254,8 @@ function App() {
     setActiveFilePath(path)
   }
 
-  function handleProjectOpened() {
+  function handleProjectOpened(root) {
+    setProjectRoot(root)
     setEditorSession((session) => session + 1)
     setDocuments([{ id: 'scratch', path: '', text: '', savedText: '' }])
     setActiveFilePath('')
@@ -288,6 +292,23 @@ function App() {
       window.confirm('Discard unsaved changes and open another folder?')
     )
   }
+
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        !event.shiftKey &&
+        !event.altKey &&
+        event.key.toLowerCase() === 'p'
+      ) {
+        event.preventDefault()
+        event.stopPropagation()
+        setShowQuickOpen(true)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+  }, [])
 
   function closeDocument(path) {
     const document = documents.find((item) => item.path === path)
@@ -379,6 +400,17 @@ function App() {
 
   return (
     <div className="workspace-shell">
+      {showQuickOpen && (
+        <QuickOpen
+          root={projectRoot}
+          onClose={() => setShowQuickOpen(false)}
+          onSelect={async (file) => {
+            const existing = documents.find((document) => document.path === file.path)
+            if (existing) setActiveFilePath(file.path)
+            else handleFileSelect(await window.api.readFile(file.path), file)
+          }}
+        />
+      )}
       {showSaveBadge && (
         <div key={saveBadgeVersion} className="save-badge" role="status" aria-live="polite">
           <span className="save-badge-icon" aria-hidden="true" />
@@ -421,6 +453,14 @@ function App() {
           >
             <header className="pane-header">
               <span className="pane-title">{currentFileLabel}</span>
+              <button
+                type="button"
+                className="pane-header-button"
+                title="Quick Open (Ctrl+P / Cmd+P)"
+                onClick={() => setShowQuickOpen(true)}
+              >
+                Quick Open
+              </button>
               <span className={`pane-meta ${isDirty ? 'is-dirty' : ''}`}>{saveLabel}</span>
               <button
                 type="button"

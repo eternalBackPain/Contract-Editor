@@ -60,7 +60,7 @@ function FileExplorerPane({
       if (!root) return
       setInlineEdit(null)
       setContextMenu(null)
-      if (onProjectOpened) onProjectOpened()
+      if (onProjectOpened) onProjectOpened(root)
     })
     return unsubscribe
   }, [canReplaceProject, onProjectOpened, openProject])
@@ -112,7 +112,7 @@ function FileExplorerPane({
     if (!root) return
     setInlineEdit(null)
     setContextMenu(null)
-    if (onProjectOpened) onProjectOpened()
+    if (onProjectOpened) onProjectOpened(root)
   }
 
   function beginCreate(mode, folderPath) {

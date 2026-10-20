@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict'
-import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { _electron as playwrightElectron } from 'playwright-core'
@@ -19,6 +19,8 @@ async function run() {
   const fixture = await mkdtemp(join(tmpdir(), 'contract-editor-smoke-'))
   await writeFile(join(fixture, 'first.contract'), SMOKE_SOURCE)
   await writeFile(join(fixture, 'second.txt'), '@begin{Second}\n# Second draft\n@end{Second}')
+  await mkdir(join(fixture, 'nested'))
+  await writeFile(join(fixture, 'nested', 'hidden.contract'), SMOKE_SOURCE)
   const app = await playwrightElectron.launch({
     executablePath: electronPath,
     args: ['.']
@@ -85,6 +87,17 @@ async function run() {
     })
     await window.getByRole('button', { name: 'Close first.contract', exact: true }).click()
     assert.equal(await window.getByRole('tab', { name: /first.contract/ }).count(), 0)
+    await window.keyboard.press(`${modifierKey()}+P`)
+    const quickSearch = window.getByRole('combobox', { name: 'Search files by name or path' })
+    await quickSearch.fill('nested/hidden')
+    await window.getByRole('option', { name: /hidden.contract/ }).waitFor()
+    await window.keyboard.press('Enter')
+    await window.getByRole('tab', { name: 'hidden.contract', exact: true }).waitFor()
+    await window.keyboard.press(`${modifierKey()}+P`)
+    await quickSearch.fill('no-such-file')
+    await window.getByText('No matching contract or text files.').waitFor()
+    await window.keyboard.press('Escape')
+    assert.equal(await window.getByRole('dialog', { name: 'Quick Open' }).count(), 0)
     console.log('Electron smoke test passed: preview, tabs, undo, save and dirty close.')
   } finally {
     await app.close()
