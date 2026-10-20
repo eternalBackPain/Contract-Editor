@@ -64,3 +64,34 @@ Opening files creates tabs. Switching tabs preserves unsaved text, undo history,
 selection and scroll position. Save the active file with Ctrl+S (Cmd+S on macOS)
 or the Save button. Closing a dirty tab, changing folders, or closing the window
 asks before discarding changes. Drafts are kept in memory for the current session.
+
+## Quick Open
+
+Press Ctrl+P (Cmd+P on macOS) or click Quick Open to find `.contract` and `.txt`
+files anywhere in the active folder, including collapsed directories. Type a
+name or relative path; matching allows skipped letters. Use Up/Down and Enter
+to open a result, or Escape to return to your draft. The search refreshes each
+time it opens, skips `.git` and `node_modules`, and asks for a smaller project
+when more than 10,000 entries would need scanning.
+
+## Text editing
+
+The editor toolbar opens Find, Replace, Go to Line and Monaco's editor command
+picker. Find/Replace support case, whole-word and regular-expression searches.
+Standard Monaco shortcuts remain available, including Ctrl+F, Ctrl+H, Ctrl+G,
+F1, Alt+Z for word wrap, and Ctrl+D for selecting the next matching occurrence
+(with platform equivalents on macOS). The status bar shows line, column and
+selected character count; clicking the position opens Go to Line.
+
+## Workspace layout
+
+- Ctrl+B / Cmd+B toggles the Explorer without losing the open folder or tree state.
+- Ctrl+Shift+V / Cmd+Shift+V toggles the rendered contract preview.
+- Ctrl+1 / Cmd+1 focuses the editor; Ctrl+2 / Cmd+2 shows and focuses the preview.
+- Ctrl+K then Z / Cmd+K then Z enters or leaves Zen Mode. Press Escape twice to leave.
+  Zen Mode temporarily hides the sidebar, activity bar and preview while preserving
+  the previous layout. The layout toolbar also exposes these controls.
+- Focus a pane divider and use Left/Right to resize, Home/End for its limits, or
+  double-click it to restore its default size. Pane sizes adapt when the window resizes.
+
+Sidebar/preview visibility and pane widths persist between sessions. Zen Mode is temporary.

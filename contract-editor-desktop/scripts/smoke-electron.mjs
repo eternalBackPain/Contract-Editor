@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict'
-import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { _electron as playwrightElectron } from 'playwright-core'
@@ -16,12 +16,15 @@ function modifierKey() {
 }
 
 async function run() {
+  const profile = await mkdtemp(join(tmpdir(), 'contract-editor-profile-'))
   const fixture = await mkdtemp(join(tmpdir(), 'contract-editor-smoke-'))
   await writeFile(join(fixture, 'first.contract'), SMOKE_SOURCE)
   await writeFile(join(fixture, 'second.txt'), '@begin{Second}\n# Second draft\n@end{Second}')
+  await mkdir(join(fixture, 'nested'))
+  await writeFile(join(fixture, 'nested', 'hidden.contract'), SMOKE_SOURCE)
   const app = await playwrightElectron.launch({
     executablePath: electronPath,
-    args: ['.']
+    args: ['.', `--user-data-dir=${profile}`]
   })
 
   try {
@@ -85,10 +88,128 @@ async function run() {
     })
     await window.getByRole('button', { name: 'Close first.contract', exact: true }).click()
     assert.equal(await window.getByRole('tab', { name: /first.contract/ }).count(), 0)
-    console.log('Electron smoke test passed: preview, tabs, undo, save and dirty close.')
+    await window.keyboard.press(`${modifierKey()}+P`)
+    const quickSearch = window.getByRole('combobox', { name: 'Search files by name or path' })
+    await quickSearch.fill('nested/hidden')
+    await window.getByRole('option', { name: /hidden.contract/ }).waitFor()
+    await window.keyboard.press('Enter')
+    await window.getByRole('tab', { name: 'hidden.contract', exact: true }).waitFor()
+    await window.keyboard.press(`${modifierKey()}+P`)
+    await quickSearch.fill('no-such-file')
+    await window.getByText('No matching contract or text files.').waitFor()
+    await window.keyboard.press('Escape')
+    assert.equal(await window.getByRole('dialog', { name: 'Quick Open' }).count(), 0)
+    await window.getByRole('button', { name: 'Find', exact: true }).click()
+    const findInput = window.locator('.find-widget .find-part textarea')
+    await findInput.fill('Smoke')
+    await window
+      .locator('.find-widget .matchesCount')
+      .filter({ hasText: /of/ })
+      .waitFor({ state: 'attached' })
+    await window.keyboard.press('Escape')
+    await window.getByRole('button', { name: 'Replace', exact: true }).click()
+    await window.locator('.find-widget .replace-part textarea').fill('Revised')
+    await window.keyboard.press(`${modifierKey()}+Alt+Enter`)
+    await window.waitForFunction(
+      () => document.querySelector('.output-document h1')?.textContent === 'Revised Title'
+    )
+    await window.keyboard.press('Escape')
+    await window.getByRole('button', { name: 'Go to Line', exact: true }).click()
+    const goToLine = window.locator('.quick-input-widget input')
+    await goToLine.fill(':3')
+    await window.keyboard.press('Enter')
+    await window.getByRole('button', { name: /Ln 3, Col/ }).waitFor()
+    const wrap = window.getByRole('button', { name: 'Word Wrap', exact: true })
+    assert.equal(await wrap.getAttribute('aria-pressed'), 'true')
+    await wrap.click()
+    assert.equal(await wrap.getAttribute('aria-pressed'), 'false')
+    await window.keyboard.press('Alt+Z')
+    await window.waitForFunction(
+      () =>
+        document.querySelector('.editor-toolbar [aria-pressed]')?.getAttribute('aria-pressed') ===
+        'true'
+    )
+    await window.keyboard.press(`${modifierKey()}+B`)
+    assert.equal(await window.locator('.workspace-sidebar').isVisible(), false)
+    await window.keyboard.press(`${modifierKey()}+B`)
+    await window.getByRole('tree', { name: 'File Explorer', exact: true }).waitFor()
+    assert.equal(await window.getByRole('button', { name: 'Open Folder', exact: true }).count(), 0)
+    await window.keyboard.press(`${modifierKey()}+Shift+V`)
+    assert.equal(await window.locator('.workspace-preview-pane').count(), 0)
+    await window.keyboard.press(`${modifierKey()}+2`)
+    await window.locator('.workspace-preview-pane').waitFor()
+    assert.equal(
+      await window
+        .locator('[aria-label="Rendered contract preview"]')
+        .evaluate((element) => element === document.activeElement),
+      true
+    )
+    await window.keyboard.press(`${modifierKey()}+1`)
+    await window.keyboard.press(`${modifierKey()}+K`)
+    await window.keyboard.press('z')
+    await window.locator('.workspace-shell.is-zen').waitFor()
+    assert.equal(await window.locator('.workspace-preview-pane').count(), 0)
+    await window.keyboard.press('Escape')
+    await window.keyboard.press('Escape')
+    await window.locator('.workspace-shell:not(.is-zen)').waitFor()
+    const divider = window.getByRole('separator', { name: 'Resize Explorer', exact: true })
+    await divider.focus()
+    await window.keyboard.press('Home')
+    assert.equal(await divider.getAttribute('aria-valuenow'), '190')
+    await window.keyboard.press('ArrowRight')
+    assert.equal(await divider.getAttribute('aria-valuenow'), '200')
+    await divider.dblclick()
+    assert.equal(await divider.getAttribute('aria-valuenow'), '260')
+    await window.getByRole('button', { name: 'Preview', exact: true }).click()
+    await window.getByRole('treeitem', { name: 'hidden.contract', exact: true }).click()
+    await window.getByRole('tree', { name: 'File Explorer', exact: true }).focus()
+    await window.keyboard.press('F2')
+    await window.locator('.explorer-inline-input').fill('renamed.contract')
+    await window.keyboard.press('Enter')
+    await window.getByRole('tab', { name: 'renamed.contract •', exact: true }).waitFor()
+    await window.getByRole('button', { name: 'Save', exact: true }).click()
+    await window.getByRole('tab', { name: 'renamed.contract', exact: true }).waitFor()
+    assert.match(
+      await readFile(join(fixture, 'nested', 'renamed.contract'), 'utf8'),
+      /Revised Title/
+    )
+    await window.getByRole('tree', { name: 'File Explorer', exact: true }).focus()
+    await window.keyboard.press('Delete')
+    await window.getByText('Deleted from disk', { exact: true }).first().waitFor()
+    assert.equal(await window.getByRole('button', { name: 'Save', exact: true }).isDisabled(), true)
+    const fillWidths = await window.evaluate(() => ({
+      editor: document.querySelector('.workspace-editor-pane').getBoundingClientRect().width,
+      group: document.querySelector('.workspace-editor-group').getBoundingClientRect().width
+    }))
+    assert.ok(
+      Math.abs(fillWidths.editor - fillWidths.group) < 2,
+      'Editor fills group with preview hidden'
+    )
+    await window.getByRole('button', { name: 'Preview', exact: true }).click()
+    // Reusing a deleted path must create a new model, independent of the retained draft.
+    await writeFile(join(fixture, 'nested', 'renamed.contract'), SMOKE_SOURCE)
+    await window.getByRole('treeitem', { name: 'renamed.contract', exact: true }).click()
+    await window.waitForFunction(
+      () => document.querySelector('.output-document h1')?.textContent?.trim() === 'Smoke Title'
+    )
+    assert.equal(
+      await window.getByRole('tab', { name: 'renamed.contract', exact: true }).count(),
+      2
+    )
+    await window.getByRole('tab', { name: 'renamed.contract', exact: true }).first().click()
+    await window.waitForFunction(
+      () => document.querySelector('.output-document h1')?.textContent?.trim() === 'Revised Title'
+    )
+    if (process.env.CONTRACT_EDITOR_SMOKE_SCREENSHOT) {
+      await window.screenshot({ path: process.env.CONTRACT_EDITOR_SMOKE_SCREENSHOT })
+    }
+    console.log(
+      'Electron smoke passed: tabs, Quick Open, editing controls, layout and file lifecycle.'
+    )
   } finally {
     await app.close()
     await rm(fixture, { recursive: true, force: true })
+    await rm(profile, { recursive: true, force: true })
   }
 }
 

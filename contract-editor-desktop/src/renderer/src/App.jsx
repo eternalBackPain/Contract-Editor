@@ -3,6 +3,8 @@ import ActivityPane from './components/ActivityPane'
 import EditorPane from './components/EditorPane'
 import ExplorerPanel from './components/ExplorerPanel'
 import OutputPane from './components/OutputPane'
+import QuickOpen from './components/QuickOpen'
+import { monaco } from './monaco'
 import {
   compile,
   getDefaultStyleProfile,
@@ -106,6 +108,43 @@ function App() {
   const lastSavedText = activeDocument?.savedText ?? ''
   const [editorSession, setEditorSession] = useState(0)
   const [saveError, setSaveError] = useState('')
+  const [projectRoot, setProjectRoot] = useState(null)
+  const [showQuickOpen, setShowQuickOpen] = useState(false)
+  const editorRef = useRef(null)
+  const [cursorStatus, setCursorStatus] = useState({ line: 1, column: 1, selected: 0 })
+  const [wordWrap, setWordWrap] = useState(true)
+
+  const handleEditorReady = useCallback((editor) => {
+    editorRef.current = editor
+    const selection = editor.onDidChangeCursorSelection((event) => {
+      const position = editor.getPosition()
+      setCursorStatus({
+        line: position?.lineNumber || 1,
+        column: position?.column || 1,
+        selected: editor.getModel()?.getValueLengthInRange(event.selection) || 0
+      })
+    })
+    const config = editor.onDidChangeConfiguration(() => {
+      setWordWrap(editor.getOption(monaco.editor.EditorOption.wordWrap) !== 'off')
+    })
+    return () => {
+      selection.dispose()
+      config.dispose()
+      editorRef.current = null
+    }
+  }, [])
+
+  function runEditorAction(id) {
+    const editor = editorRef.current
+    editor?.focus()
+    void editor?.getAction(id)?.run()
+  }
+
+  function toggleWordWrap() {
+    const editor = editorRef.current
+    editor?.updateOptions({ wordWrap: wordWrap ? 'off' : 'on' })
+    editor?.focus()
+  }
   const [HTMLText, setHTMLText] = useState('')
   const [styleProfileOverride, setStyleProfileOverride] = useState(initialStyleOverride)
   const [styleDraftText, setStyleDraftText] = useState(() => formatStyleDraft(initialStyleOverride))
@@ -116,6 +155,70 @@ function App() {
   const [editorWidth, setEditorWidth] = useState(initialLayoutPrefs.editorWidth)
   const [showExplorer, setShowExplorer] = useState(initialLayoutPrefs.showExplorer)
   const [showPreview, setShowPreview] = useState(initialLayoutPrefs.showPreview)
+  const [zenMode, setZenMode] = useState(false)
+  const [groupWidth, setGroupWidth] = useState(0)
+  const previewRef = useRef(null)
+  const chordRef = useRef(0)
+  const escapeRef = useRef(0)
+  const visiblePreview = showPreview && !zenMode
+  const visibleExplorer = showExplorer && !zenMode
+  const minEditorWidth = Math.min(WORKSPACE_THEME_METRICS.minPaneWidth, groupWidth / 2)
+  const effectiveEditorWidth = Math.max(
+    minEditorWidth,
+    Math.min(editorWidth ?? groupWidth / 2, groupWidth - minEditorWidth)
+  )
+
+  useEffect(() => {
+    const observer = new ResizeObserver(([entry]) => setGroupWidth(entry.contentRect.width))
+    observer.observe(editorOutputRef.current)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.target.closest?.('dialog, .quick-input-widget, .find-widget')) return
+      const modifier = event.ctrlKey || event.metaKey
+      const key = event.key.toLowerCase()
+      if (chordRef.current && Date.now() - chordRef.current < 1500 && key === 'z') {
+        event.preventDefault()
+        event.stopPropagation()
+        chordRef.current = 0
+        setZenMode((current) => !current)
+        editorRef.current?.focus()
+      } else if (modifier && key === 'k' && !event.shiftKey && !event.altKey) {
+        chordRef.current = Date.now()
+        event.preventDefault()
+      } else if (modifier && key === 'b' && !event.shiftKey && !event.altKey) {
+        event.preventDefault()
+        event.stopPropagation()
+        setZenMode(false)
+        setShowExplorer((current) => !current)
+        editorRef.current?.focus()
+      } else if (modifier && event.shiftKey && key === 'v' && !event.altKey) {
+        event.preventDefault()
+        event.stopPropagation()
+        setZenMode(false)
+        setShowPreview((current) => !current)
+      } else if (modifier && !event.shiftKey && !event.altKey && key === '1') {
+        event.preventDefault()
+        event.stopPropagation()
+        editorRef.current?.focus()
+      } else if (modifier && !event.shiftKey && !event.altKey && key === '2') {
+        event.preventDefault()
+        event.stopPropagation()
+        setZenMode(false)
+        setShowPreview(true)
+        requestAnimationFrame(() => previewRef.current?.focus())
+      } else if (event.key === 'Escape') {
+        if (Date.now() - escapeRef.current < 700) setZenMode(false)
+        escapeRef.current = Date.now()
+      } else {
+        chordRef.current = 0
+      }
+    }
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+  }, [])
   const [saveBadgeVersion, setSaveBadgeVersion] = useState(0)
   const [showSaveBadge, setShowSaveBadge] = useState(false)
   const editorOutputRef = useRef(null)
@@ -251,7 +354,8 @@ function App() {
     setActiveFilePath(path)
   }
 
-  function handleProjectOpened() {
+  function handleProjectOpened(root) {
+    setProjectRoot(root)
     setEditorSession((session) => session + 1)
     setDocuments([{ id: 'scratch', path: '', text: '', savedText: '' }])
     setActiveFilePath('')
@@ -288,6 +392,23 @@ function App() {
       window.confirm('Discard unsaved changes and open another folder?')
     )
   }
+
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        !event.shiftKey &&
+        !event.altKey &&
+        event.key.toLowerCase() === 'p'
+      ) {
+        event.preventDefault()
+        event.stopPropagation()
+        setShowQuickOpen(true)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+  }, [])
 
   function closeDocument(path) {
     const document = documents.find((item) => item.path === path)
@@ -348,8 +469,8 @@ function App() {
           return
         }
         if (kind === 'editor') {
-          const min = WORKSPACE_THEME_METRICS.minPaneWidth
-          const max = bounds.width - WORKSPACE_THEME_METRICS.minPaneWidth
+          const min = Math.min(WORKSPACE_THEME_METRICS.minPaneWidth, bounds.width / 2)
+          const max = bounds.width - min
           setEditorWidth(clamp(startEditor + dx, min, max))
         }
       }
@@ -366,7 +487,25 @@ function App() {
     }
   }
 
+  function resizeWithKeyboard(kind, event) {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+    event.preventDefault()
+    const explorer = kind === 'explorer'
+    const min = explorer ? WORKSPACE_THEME_METRICS.minExplorerWidth : minEditorWidth
+    const max = explorer ? WORKSPACE_THEME_METRICS.maxExplorerWidth : groupWidth - minEditorWidth
+    const current = explorer ? explorerWidth : effectiveEditorWidth
+    const next =
+      event.key === 'Home'
+        ? min
+        : event.key === 'End'
+          ? max
+          : clamp(current + (event.key === 'ArrowLeft' ? -10 : 10), min, max)
+    if (explorer) setExplorerWidth(next)
+    else setEditorWidth(next)
+  }
+
   function handleActivitySelect(next) {
+    setZenMode(false)
     setActiveExplorer((prev) => {
       if (prev === next && showExplorer) {
         setShowExplorer(false)
@@ -378,49 +517,116 @@ function App() {
   }
 
   return (
-    <div className="workspace-shell">
+    <div className={`workspace-shell ${zenMode ? 'is-zen' : ''}`}>
+      {showQuickOpen && (
+        <QuickOpen
+          root={projectRoot}
+          onClose={() => setShowQuickOpen(false)}
+          onSelect={async (file) => {
+            const existing = documents.find((document) => document.path === file.path)
+            if (existing) setActiveFilePath(file.path)
+            else handleFileSelect(await window.api.readFile(file.path), file)
+          }}
+        />
+      )}
       {showSaveBadge && (
         <div key={saveBadgeVersion} className="save-badge" role="status" aria-live="polite">
           <span className="save-badge-icon" aria-hidden="true" />
           Saved
         </div>
       )}
+      <div className="layout-toolbar" role="toolbar" aria-label="Workspace layout">
+        <button
+          type="button"
+          aria-pressed={visibleExplorer}
+          title="Toggle Sidebar (Ctrl+B / Cmd+B)"
+          onClick={() => {
+            setZenMode(false)
+            setShowExplorer(!showExplorer)
+          }}
+        >
+          Explorer
+        </button>
+        <button
+          type="button"
+          aria-pressed={visiblePreview}
+          title="Toggle Preview (Ctrl+Shift+V / Cmd+Shift+V)"
+          onClick={() => {
+            setZenMode(false)
+            setShowPreview(!showPreview)
+          }}
+        >
+          Preview
+        </button>
+        <button
+          type="button"
+          aria-pressed={zenMode}
+          title="Zen Mode (Ctrl+K then Z / Cmd+K then Z)"
+          onClick={() => {
+            setZenMode(!zenMode)
+            editorRef.current?.focus()
+          }}
+        >
+          {zenMode ? 'Exit Zen Mode' : 'Zen Mode'}
+        </button>
+      </div>
       <div className="workspace-main">
         <div className="activity-bar">
           <ActivityPane active={activeExplorer} onSelect={handleActivitySelect} />
         </div>
-        {showExplorer ? (
-          <div className="workspace-sidebar" style={{ width: explorerWidth }}>
-            <ExplorerPanel
-              active={activeExplorer}
-              onFileSelect={handleFileSelect}
-              selectedFilePath={activeFilePath}
-              onProjectOpened={handleProjectOpened}
-              canReplaceProject={canReplaceProject}
-              onPathRenamed={handlePathRenamed}
-              onPathDeleted={handlePathDeleted}
-              formattingState={{
-                draftText: styleDraftText,
-                parseError: styleParseError,
-                diagnostics: styleDiagnostics,
-                isUsingDefault: isUsingDefaultStyle,
-                onDraftChange: handleStyleDraftChange,
-                onApply: handleApplyStyleProfile,
-                onReset: handleResetStyleProfile
-              }}
-            />
-          </div>
-        ) : null}
-        {showExplorer ? (
-          <div className="resizer workspace-resizer" onMouseDown={startDrag('explorer')} />
+        <div
+          className="workspace-sidebar"
+          style={{ width: explorerWidth, display: visibleExplorer ? undefined : 'none' }}
+        >
+          <ExplorerPanel
+            active={activeExplorer}
+            onFileSelect={handleFileSelect}
+            selectedFilePath={activeFilePath}
+            onProjectOpened={handleProjectOpened}
+            canReplaceProject={canReplaceProject}
+            onPathRenamed={handlePathRenamed}
+            onPathDeleted={handlePathDeleted}
+            formattingState={{
+              draftText: styleDraftText,
+              parseError: styleParseError,
+              diagnostics: styleDiagnostics,
+              isUsingDefault: isUsingDefaultStyle,
+              onDraftChange: handleStyleDraftChange,
+              onApply: handleApplyStyleProfile,
+              onReset: handleResetStyleProfile
+            }}
+          />
+        </div>
+        {visibleExplorer ? (
+          <div
+            className="resizer workspace-resizer"
+            role="separator"
+            tabIndex={0}
+            aria-label="Resize Explorer"
+            aria-orientation="vertical"
+            aria-valuemin={190}
+            aria-valuemax={460}
+            aria-valuenow={explorerWidth}
+            onKeyDown={(event) => resizeWithKeyboard('explorer', event)}
+            onDoubleClick={() => setExplorerWidth(WORKSPACE_THEME_METRICS.defaultExplorerWidth)}
+            onMouseDown={startDrag('explorer')}
+          />
         ) : null}
         <div ref={editorOutputRef} className="workspace-editor-group">
           <div
-            className={`workspace-pane workspace-editor-pane ${showPreview && editorWidth ? 'is-fixed' : 'is-flex'}`}
-            style={showPreview && editorWidth ? { width: editorWidth } : undefined}
+            className={`workspace-pane workspace-editor-pane ${visiblePreview ? 'is-fixed' : 'is-flex'}`}
+            style={visiblePreview ? { width: effectiveEditorWidth } : undefined}
           >
             <header className="pane-header">
               <span className="pane-title">{currentFileLabel}</span>
+              <button
+                type="button"
+                className="pane-header-button"
+                title="Quick Open (Ctrl+P / Cmd+P)"
+                onClick={() => setShowQuickOpen(true)}
+              >
+                Quick Open
+              </button>
               <span className={`pane-meta ${isDirty ? 'is-dirty' : ''}`}>{saveLabel}</span>
               <button
                 type="button"
@@ -459,8 +665,49 @@ function App() {
                 {saveError}
               </p>
             )}
+            <div className="editor-toolbar" role="toolbar" aria-label="Text editing">
+              <button
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => runEditorAction('actions.find')}
+                title="Find (Ctrl+F / Cmd+F)"
+              >
+                Find
+              </button>
+              <button
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => runEditorAction('editor.action.startFindReplaceAction')}
+                title="Replace (Ctrl+H / Cmd+Option+F)"
+              >
+                Replace
+              </button>
+              <button
+                type="button"
+                onClick={() => runEditorAction('editor.action.gotoLine')}
+                title="Go to Line (Ctrl+G)"
+              >
+                Go to Line
+              </button>
+              <button
+                type="button"
+                onClick={() => runEditorAction('editor.action.quickCommand')}
+                title="Editor Commands (F1)"
+              >
+                Commands
+              </button>
+              <button
+                type="button"
+                aria-pressed={wordWrap}
+                onClick={toggleWordWrap}
+                title="Toggle Word Wrap (Alt+Z / Option+Z)"
+              >
+                Word Wrap
+              </button>
+            </div>
             <div className="pane-body">
               <EditorPane
+                onReady={handleEditorReady}
                 onChange={handleOnChange}
                 value={editorText}
                 key={editorSession}
@@ -469,10 +716,22 @@ function App() {
               />
             </div>
           </div>
-          {showPreview ? (
-            <div className="resizer workspace-resizer" onMouseDown={startDrag('editor')} />
+          {visiblePreview ? (
+            <div
+              className="resizer workspace-resizer"
+              role="separator"
+              tabIndex={0}
+              aria-label="Resize Editor and Preview"
+              aria-orientation="vertical"
+              aria-valuemin={Math.round(minEditorWidth)}
+              aria-valuemax={Math.round(groupWidth - minEditorWidth)}
+              aria-valuenow={Math.round(effectiveEditorWidth)}
+              onKeyDown={(event) => resizeWithKeyboard('editor', event)}
+              onDoubleClick={() => setEditorWidth(null)}
+              onMouseDown={startDrag('editor')}
+            />
           ) : null}
-          {showPreview ? (
+          {visiblePreview ? (
             <div className="workspace-pane workspace-preview-pane">
               <header className="pane-header">
                 <span className="pane-title">Rendered Contract</span>
@@ -484,26 +743,30 @@ function App() {
                   Hide Preview
                 </button>
               </header>
-              <div className="pane-body">
+              <div
+                ref={previewRef}
+                className="pane-body"
+                tabIndex={0}
+                aria-label="Rendered contract preview"
+              >
                 <OutputPane html={HTMLText} />
               </div>
             </div>
-          ) : (
-            <div className="preview-collapsed">
-              <button
-                type="button"
-                className="pane-header-button"
-                onClick={() => setShowPreview(true)}
-              >
-                Show Preview
-              </button>
-            </div>
-          )}
+          ) : null}
         </div>
       </div>
       <footer className="workspace-status-bar">
         <span>{currentFileLabel}</span>
         <span>{wordCount} words</span>
+        <button
+          type="button"
+          className="status-button"
+          onClick={() => runEditorAction('editor.action.gotoLine')}
+          title="Go to Line"
+        >
+          Ln {cursorStatus.line}, Col {cursorStatus.column}
+          {cursorStatus.selected ? ` (${cursorStatus.selected} selected)` : ''}
+        </button>
         <span>{saveLabel}</span>
       </footer>
     </div>

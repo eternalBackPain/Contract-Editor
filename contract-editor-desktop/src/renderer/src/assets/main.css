@@ -662,3 +662,127 @@ input {
   color: #8c2020;
   font-size: 12px;
 }
+
+.quick-open {
+  position: fixed;
+  top: 12%;
+  margin: 0 auto;
+  width: min(600px, 90vw);
+  max-height: 70vh;
+  padding: 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  color: var(--text-primary);
+  background: var(--surface-pane);
+  box-shadow: 0 8px 30px #0003;
+}
+.quick-open::backdrop {
+  background: #0002;
+}
+.quick-open-input-row {
+  display: flex;
+  gap: 6px;
+}
+.quick-open-input-row input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--focus-ring);
+  background: white;
+}
+.quick-open-input-row button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.quick-open-results {
+  max-height: 40vh;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+.quick-open-results [role='option'] {
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+}
+.quick-open-results [aria-selected='true'] {
+  background: var(--state-active);
+}
+.quick-open-results small {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.quick-open p {
+  margin: 10px 4px;
+  font-size: 12px;
+}
+.quick-open-hint {
+  color: var(--text-secondary);
+}
+
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 6px;
+  background: var(--surface-pane);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.editor-toolbar button {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 3px 6px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.editor-toolbar button:hover,
+.editor-toolbar [aria-pressed='true'] {
+  background: var(--state-active);
+}
+.editor-toolbar button:focus-visible {
+  outline: 1px solid var(--focus-ring);
+}
+.status-button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0 4px;
+  cursor: pointer;
+  font-size: inherit;
+}
+.status-button:hover {
+  background: var(--state-hover);
+}
+
+.layout-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--surface-pane-muted);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.layout-toolbar button {
+  padding: 4px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  font-size: 11px;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.layout-toolbar [aria-pressed='true'] {
+  background: var(--state-active);
+}
+.layout-toolbar button:focus-visible,
+.workspace-resizer:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+.workspace-shell.is-zen .activity-bar {
+  display: none;
+}

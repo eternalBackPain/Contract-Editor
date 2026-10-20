@@ -17,7 +17,7 @@ The Contract Authority is not, by executing this MICTA:
 ### at any location where, or in respect of any project that, the Supplier may be required to supply goods, services and/or other activities.
 @end{GeneralConditions}`
 
-function MonacoEditor({ onChange, value, documentId, openDocumentIds }) {
+function MonacoEditor({ onChange, value, documentId, openDocumentIds, onReady }) {
   const containerRef = useRef(null)
   const editorRef = useRef(null)
   const modelsRef = useRef(new Map())
@@ -68,6 +68,16 @@ function MonacoEditor({ onChange, value, documentId, openDocumentIds }) {
     })
 
     editorRef.current = editor
+    const models = modelsRef.current
+    const wrapAction = editor.addAction({
+      id: 'contract.toggleWordWrap',
+      label: 'Toggle Word Wrap',
+      keybindings: [monaco.KeyMod.Alt | monaco.KeyCode.KeyZ],
+      run: () =>
+        editor.updateOptions({
+          wordWrap: editor.getOption(monaco.editor.EditorOption.wordWrap) === 'off' ? 'on' : 'off'
+        })
+    })
 
     const disposable = editor.onDidChangeModelContent(() => {
       const nextValue = editor.getValue()
@@ -76,12 +86,15 @@ function MonacoEditor({ onChange, value, documentId, openDocumentIds }) {
 
     return () => {
       disposable.dispose()
+      wrapAction.dispose()
       editor.dispose()
-      for (const entry of modelsRef.current.values()) entry.model.dispose()
-      modelsRef.current.clear()
+      for (const entry of models.values()) entry.model.dispose()
+      models.clear()
       editorRef.current = null
     }
   }, [])
+
+  useLayoutEffect(() => onReady?.(editorRef.current), [onReady])
 
   useLayoutEffect(() => {
     const editor = editorRef.current
