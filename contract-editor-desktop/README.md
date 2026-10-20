@@ -73,3 +73,12 @@ name or relative path; matching allows skipped letters. Use Up/Down and Enter
 to open a result, or Escape to return to your draft. The search refreshes each
 time it opens, skips `.git` and `node_modules`, and asks for a smaller project
 when more than 10,000 entries would need scanning.
+
+## Text editing
+
+The editor toolbar opens Find, Replace, Go to Line and Monaco's editor command
+picker. Find/Replace support case, whole-word and regular-expression searches.
+Standard Monaco shortcuts remain available, including Ctrl+F, Ctrl+H, Ctrl+G,
+F1, Alt+Z for word wrap, and Ctrl+D for selecting the next matching occurrence
+(with platform equivalents on macOS). The status bar shows line, column and
+selected character count; clicking the position opens Go to Line.

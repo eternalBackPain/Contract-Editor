@@ -98,7 +98,37 @@ async function run() {
     await window.getByText('No matching contract or text files.').waitFor()
     await window.keyboard.press('Escape')
     assert.equal(await window.getByRole('dialog', { name: 'Quick Open' }).count(), 0)
-    console.log('Electron smoke test passed: preview, tabs, undo, save and dirty close.')
+    await window.getByRole('button', { name: 'Find', exact: true }).click()
+    const findInput = window.locator('.find-widget .find-part textarea')
+    await findInput.fill('Smoke')
+    await window
+      .locator('.find-widget .matchesCount')
+      .filter({ hasText: /of/ })
+      .waitFor({ state: 'attached' })
+    await window.keyboard.press('Escape')
+    await window.getByRole('button', { name: 'Replace', exact: true }).click()
+    await window.locator('.find-widget .replace-part textarea').fill('Revised')
+    await window.keyboard.press(`${modifierKey()}+Alt+Enter`)
+    await window.waitForFunction(
+      () => document.querySelector('.output-document h1')?.textContent === 'Revised Title'
+    )
+    await window.keyboard.press('Escape')
+    await window.getByRole('button', { name: 'Go to Line', exact: true }).click()
+    const goToLine = window.locator('.quick-input-widget input')
+    await goToLine.fill(':3')
+    await window.keyboard.press('Enter')
+    await window.getByRole('button', { name: /Ln 3, Col/ }).waitFor()
+    const wrap = window.getByRole('button', { name: 'Word Wrap', exact: true })
+    assert.equal(await wrap.getAttribute('aria-pressed'), 'true')
+    await wrap.click()
+    assert.equal(await wrap.getAttribute('aria-pressed'), 'false')
+    await window.keyboard.press('Alt+Z')
+    await window.waitForFunction(
+      () =>
+        document.querySelector('.editor-toolbar [aria-pressed]')?.getAttribute('aria-pressed') ===
+        'true'
+    )
+    console.log('Electron smoke passed: preview, tabs, undo/save, Quick Open and editor controls.')
   } finally {
     await app.close()
     await rm(fixture, { recursive: true, force: true })
