@@ -82,3 +82,16 @@ Standard Monaco shortcuts remain available, including Ctrl+F, Ctrl+H, Ctrl+G,
 F1, Alt+Z for word wrap, and Ctrl+D for selecting the next matching occurrence
 (with platform equivalents on macOS). The status bar shows line, column and
 selected character count; clicking the position opens Go to Line.
+
+## Workspace layout
+
+- Ctrl+B / Cmd+B toggles the Explorer without losing the open folder or tree state.
+- Ctrl+Shift+V / Cmd+Shift+V toggles the rendered contract preview.
+- Ctrl+1 / Cmd+1 focuses the editor; Ctrl+2 / Cmd+2 shows and focuses the preview.
+- Ctrl+K then Z / Cmd+K then Z enters or leaves Zen Mode. Press Escape twice to leave.
+  Zen Mode temporarily hides the sidebar, activity bar and preview while preserving
+  the previous layout. The layout toolbar also exposes these controls.
+- Focus a pane divider and use Left/Right to resize, Home/End for its limits, or
+  double-click it to restore its default size. Pane sizes adapt when the window resizes.
+
+Sidebar/preview visibility and pane widths persist between sessions. Zen Mode is temporary.

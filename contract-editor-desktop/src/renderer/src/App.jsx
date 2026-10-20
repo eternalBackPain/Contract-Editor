@@ -155,6 +155,70 @@ function App() {
   const [editorWidth, setEditorWidth] = useState(initialLayoutPrefs.editorWidth)
   const [showExplorer, setShowExplorer] = useState(initialLayoutPrefs.showExplorer)
   const [showPreview, setShowPreview] = useState(initialLayoutPrefs.showPreview)
+  const [zenMode, setZenMode] = useState(false)
+  const [groupWidth, setGroupWidth] = useState(0)
+  const previewRef = useRef(null)
+  const chordRef = useRef(0)
+  const escapeRef = useRef(0)
+  const visiblePreview = showPreview && !zenMode
+  const visibleExplorer = showExplorer && !zenMode
+  const minEditorWidth = Math.min(WORKSPACE_THEME_METRICS.minPaneWidth, groupWidth / 2)
+  const effectiveEditorWidth = Math.max(
+    minEditorWidth,
+    Math.min(editorWidth ?? groupWidth / 2, groupWidth - minEditorWidth)
+  )
+
+  useEffect(() => {
+    const observer = new ResizeObserver(([entry]) => setGroupWidth(entry.contentRect.width))
+    observer.observe(editorOutputRef.current)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.target.closest?.('dialog, .quick-input-widget, .find-widget')) return
+      const modifier = event.ctrlKey || event.metaKey
+      const key = event.key.toLowerCase()
+      if (chordRef.current && Date.now() - chordRef.current < 1500 && key === 'z') {
+        event.preventDefault()
+        event.stopPropagation()
+        chordRef.current = 0
+        setZenMode((current) => !current)
+        editorRef.current?.focus()
+      } else if (modifier && key === 'k' && !event.shiftKey && !event.altKey) {
+        chordRef.current = Date.now()
+        event.preventDefault()
+      } else if (modifier && key === 'b' && !event.shiftKey && !event.altKey) {
+        event.preventDefault()
+        event.stopPropagation()
+        setZenMode(false)
+        setShowExplorer((current) => !current)
+        editorRef.current?.focus()
+      } else if (modifier && event.shiftKey && key === 'v' && !event.altKey) {
+        event.preventDefault()
+        event.stopPropagation()
+        setZenMode(false)
+        setShowPreview((current) => !current)
+      } else if (modifier && !event.shiftKey && !event.altKey && key === '1') {
+        event.preventDefault()
+        event.stopPropagation()
+        editorRef.current?.focus()
+      } else if (modifier && !event.shiftKey && !event.altKey && key === '2') {
+        event.preventDefault()
+        event.stopPropagation()
+        setZenMode(false)
+        setShowPreview(true)
+        requestAnimationFrame(() => previewRef.current?.focus())
+      } else if (event.key === 'Escape') {
+        if (Date.now() - escapeRef.current < 700) setZenMode(false)
+        escapeRef.current = Date.now()
+      } else {
+        chordRef.current = 0
+      }
+    }
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+  }, [])
   const [saveBadgeVersion, setSaveBadgeVersion] = useState(0)
   const [showSaveBadge, setShowSaveBadge] = useState(false)
   const editorOutputRef = useRef(null)
@@ -405,8 +469,8 @@ function App() {
           return
         }
         if (kind === 'editor') {
-          const min = WORKSPACE_THEME_METRICS.minPaneWidth
-          const max = bounds.width - WORKSPACE_THEME_METRICS.minPaneWidth
+          const min = Math.min(WORKSPACE_THEME_METRICS.minPaneWidth, bounds.width / 2)
+          const max = bounds.width - min
           setEditorWidth(clamp(startEditor + dx, min, max))
         }
       }
@@ -423,7 +487,25 @@ function App() {
     }
   }
 
+  function resizeWithKeyboard(kind, event) {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+    event.preventDefault()
+    const explorer = kind === 'explorer'
+    const min = explorer ? WORKSPACE_THEME_METRICS.minExplorerWidth : minEditorWidth
+    const max = explorer ? WORKSPACE_THEME_METRICS.maxExplorerWidth : groupWidth - minEditorWidth
+    const current = explorer ? explorerWidth : effectiveEditorWidth
+    const next =
+      event.key === 'Home'
+        ? min
+        : event.key === 'End'
+          ? max
+          : clamp(current + (event.key === 'ArrowLeft' ? -10 : 10), min, max)
+    if (explorer) setExplorerWidth(next)
+    else setEditorWidth(next)
+  }
+
   function handleActivitySelect(next) {
+    setZenMode(false)
     setActiveExplorer((prev) => {
       if (prev === next && showExplorer) {
         setShowExplorer(false)
@@ -435,7 +517,7 @@ function App() {
   }
 
   return (
-    <div className="workspace-shell">
+    <div className={`workspace-shell ${zenMode ? 'is-zen' : ''}`}>
       {showQuickOpen && (
         <QuickOpen
           root={projectRoot}
@@ -453,39 +535,87 @@ function App() {
           Saved
         </div>
       )}
+      <div className="layout-toolbar" role="toolbar" aria-label="Workspace layout">
+        <button
+          type="button"
+          aria-pressed={visibleExplorer}
+          title="Toggle Sidebar (Ctrl+B / Cmd+B)"
+          onClick={() => {
+            setZenMode(false)
+            setShowExplorer(!showExplorer)
+          }}
+        >
+          Explorer
+        </button>
+        <button
+          type="button"
+          aria-pressed={visiblePreview}
+          title="Toggle Preview (Ctrl+Shift+V / Cmd+Shift+V)"
+          onClick={() => {
+            setZenMode(false)
+            setShowPreview(!showPreview)
+          }}
+        >
+          Preview
+        </button>
+        <button
+          type="button"
+          aria-pressed={zenMode}
+          title="Zen Mode (Ctrl+K then Z / Cmd+K then Z)"
+          onClick={() => {
+            setZenMode(!zenMode)
+            editorRef.current?.focus()
+          }}
+        >
+          {zenMode ? 'Exit Zen Mode' : 'Zen Mode'}
+        </button>
+      </div>
       <div className="workspace-main">
         <div className="activity-bar">
           <ActivityPane active={activeExplorer} onSelect={handleActivitySelect} />
         </div>
-        {showExplorer ? (
-          <div className="workspace-sidebar" style={{ width: explorerWidth }}>
-            <ExplorerPanel
-              active={activeExplorer}
-              onFileSelect={handleFileSelect}
-              selectedFilePath={activeFilePath}
-              onProjectOpened={handleProjectOpened}
-              canReplaceProject={canReplaceProject}
-              onPathRenamed={handlePathRenamed}
-              onPathDeleted={handlePathDeleted}
-              formattingState={{
-                draftText: styleDraftText,
-                parseError: styleParseError,
-                diagnostics: styleDiagnostics,
-                isUsingDefault: isUsingDefaultStyle,
-                onDraftChange: handleStyleDraftChange,
-                onApply: handleApplyStyleProfile,
-                onReset: handleResetStyleProfile
-              }}
-            />
-          </div>
-        ) : null}
-        {showExplorer ? (
-          <div className="resizer workspace-resizer" onMouseDown={startDrag('explorer')} />
+        <div
+          className="workspace-sidebar"
+          style={{ width: explorerWidth, display: visibleExplorer ? undefined : 'none' }}
+        >
+          <ExplorerPanel
+            active={activeExplorer}
+            onFileSelect={handleFileSelect}
+            selectedFilePath={activeFilePath}
+            onProjectOpened={handleProjectOpened}
+            canReplaceProject={canReplaceProject}
+            onPathRenamed={handlePathRenamed}
+            onPathDeleted={handlePathDeleted}
+            formattingState={{
+              draftText: styleDraftText,
+              parseError: styleParseError,
+              diagnostics: styleDiagnostics,
+              isUsingDefault: isUsingDefaultStyle,
+              onDraftChange: handleStyleDraftChange,
+              onApply: handleApplyStyleProfile,
+              onReset: handleResetStyleProfile
+            }}
+          />
+        </div>
+        {visibleExplorer ? (
+          <div
+            className="resizer workspace-resizer"
+            role="separator"
+            tabIndex={0}
+            aria-label="Resize Explorer"
+            aria-orientation="vertical"
+            aria-valuemin={190}
+            aria-valuemax={460}
+            aria-valuenow={explorerWidth}
+            onKeyDown={(event) => resizeWithKeyboard('explorer', event)}
+            onDoubleClick={() => setExplorerWidth(WORKSPACE_THEME_METRICS.defaultExplorerWidth)}
+            onMouseDown={startDrag('explorer')}
+          />
         ) : null}
         <div ref={editorOutputRef} className="workspace-editor-group">
           <div
-            className={`workspace-pane workspace-editor-pane ${showPreview && editorWidth ? 'is-fixed' : 'is-flex'}`}
-            style={showPreview && editorWidth ? { width: editorWidth } : undefined}
+            className={`workspace-pane workspace-editor-pane ${visiblePreview ? 'is-fixed' : 'is-flex'}`}
+            style={visiblePreview ? { width: effectiveEditorWidth } : undefined}
           >
             <header className="pane-header">
               <span className="pane-title">{currentFileLabel}</span>
@@ -586,10 +716,22 @@ function App() {
               />
             </div>
           </div>
-          {showPreview ? (
-            <div className="resizer workspace-resizer" onMouseDown={startDrag('editor')} />
+          {visiblePreview ? (
+            <div
+              className="resizer workspace-resizer"
+              role="separator"
+              tabIndex={0}
+              aria-label="Resize Editor and Preview"
+              aria-orientation="vertical"
+              aria-valuemin={Math.round(minEditorWidth)}
+              aria-valuemax={Math.round(groupWidth - minEditorWidth)}
+              aria-valuenow={Math.round(effectiveEditorWidth)}
+              onKeyDown={(event) => resizeWithKeyboard('editor', event)}
+              onDoubleClick={() => setEditorWidth(null)}
+              onMouseDown={startDrag('editor')}
+            />
           ) : null}
-          {showPreview ? (
+          {visiblePreview ? (
             <div className="workspace-pane workspace-preview-pane">
               <header className="pane-header">
                 <span className="pane-title">Rendered Contract</span>
@@ -601,21 +743,16 @@ function App() {
                   Hide Preview
                 </button>
               </header>
-              <div className="pane-body">
+              <div
+                ref={previewRef}
+                className="pane-body"
+                tabIndex={0}
+                aria-label="Rendered contract preview"
+              >
                 <OutputPane html={HTMLText} />
               </div>
             </div>
-          ) : (
-            <div className="preview-collapsed">
-              <button
-                type="button"
-                className="pane-header-button"
-                onClick={() => setShowPreview(true)}
-              >
-                Show Preview
-              </button>
-            </div>
-          )}
+          ) : null}
         </div>
       </div>
       <footer className="workspace-status-bar">
