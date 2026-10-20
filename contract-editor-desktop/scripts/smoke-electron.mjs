@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict'
+import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { _electron as playwrightElectron } from 'playwright-core'
 import electronPath from 'electron'
 
@@ -13,6 +16,9 @@ function modifierKey() {
 }
 
 async function run() {
+  const fixture = await mkdtemp(join(tmpdir(), 'contract-editor-smoke-'))
+  await writeFile(join(fixture, 'first.contract'), SMOKE_SOURCE)
+  await writeFile(join(fixture, 'second.txt'), '@begin{Second}\n# Second draft\n@end{Second}')
   const app = await playwrightElectron.launch({
     executablePath: electronPath,
     args: ['.']
@@ -42,9 +48,47 @@ async function run() {
     const renderedBody = await window.locator('.output-document p').first().textContent()
     assert.match(renderedBody || '', /Smoke body paragraph\./)
 
-    console.log('Electron smoke test passed.')
+    await app.evaluate(({ dialog }, fixture) => {
+      dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [fixture] })
+    }, fixture)
+    await window.evaluate(() => {
+      window.confirm = () => true
+    })
+    await window.getByRole('button', { name: 'Open Folder', exact: true }).click()
+    await window.locator('[data-path]').filter({ hasText: 'first.contract' }).last().click()
+    await window.getByRole('tab', { name: 'first.contract', exact: true }).waitFor()
+    await editorSurface.click({ position: { x: 10, y: 10 } })
+    await window.keyboard.press(`${modifierKey()}+End`)
+    await window.keyboard.insertText(' changed')
+    await window.getByRole('tab', { name: 'first.contract •', exact: true }).waitFor()
+    await window.locator('[data-path]').filter({ hasText: 'second.txt' }).last().click()
+    await window.getByRole('tab', { name: 'second.txt', exact: true }).waitFor()
+    await window.getByRole('tab', { name: 'first.contract •', exact: true }).click()
+    await window.keyboard.press(`${modifierKey()}+Z`)
+    await window.getByRole('tab', { name: 'first.contract', exact: true }).waitFor()
+    await window.keyboard.insertText(' saved edit')
+    await window.getByRole('button', { name: 'Save', exact: true }).click()
+    await window.getByRole('tab', { name: 'first.contract', exact: true }).waitFor()
+    assert.match(await readFile(join(fixture, 'first.contract'), 'utf8'), /saved edit/)
+    await editorSurface.click({ position: { x: 10, y: 10 } })
+    await window.keyboard.insertText(' unsaved edit')
+    await window.evaluate(() => {
+      window.confirm = () => false
+    })
+    await window.getByRole('button', { name: 'Close first.contract', exact: true }).click()
+    assert.equal(
+      await window.getByRole('tab', { name: 'first.contract •', exact: true }).count(),
+      1
+    )
+    await window.evaluate(() => {
+      window.confirm = () => true
+    })
+    await window.getByRole('button', { name: 'Close first.contract', exact: true }).click()
+    assert.equal(await window.getByRole('tab', { name: /first.contract/ }).count(), 0)
+    console.log('Electron smoke test passed: preview, tabs, undo, save and dirty close.')
   } finally {
     await app.close()
+    await rm(fixture, { recursive: true, force: true })
   }
 }
 

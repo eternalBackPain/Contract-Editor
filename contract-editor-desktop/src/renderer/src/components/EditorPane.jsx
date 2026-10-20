@@ -1,9 +1,9 @@
 import MonacoEditor from './MonacoEditor'
 
-function EditorPane({ onChange, value }) {
+function EditorPane(props) {
   return (
     <div className="editor-pane-body">
-      <MonacoEditor onChange={onChange} value={value} />
+      <MonacoEditor {...props} />
     </div>
   )
 }

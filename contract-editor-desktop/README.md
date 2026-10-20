@@ -57,3 +57,10 @@ npm run test:smoke
 `
 
 This builds the app, launches Electron, verifies preview renders, and verifies editor updates propagate to preview.
+
+## Open drafts
+
+Opening files creates tabs. Switching tabs preserves unsaved text, undo history,
+selection and scroll position. Save the active file with Ctrl+S (Cmd+S on macOS)
+or the Save button. Closing a dirty tab, changing folders, or closing the window
+asks before discarding changes. Drafts are kept in memory for the current session.

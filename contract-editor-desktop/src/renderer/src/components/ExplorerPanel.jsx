@@ -8,6 +8,9 @@ function ExplorerPanel({
   onFileSelect,
   selectedFilePath,
   onProjectOpened,
+  canReplaceProject,
+  onPathRenamed,
+  onPathDeleted,
   formattingState
 }) {
   function paneClass(name) {
@@ -21,6 +24,9 @@ function ExplorerPanel({
           onFileSelect={onFileSelect}
           selectedFilePath={selectedFilePath}
           onProjectOpened={onProjectOpened}
+          canReplaceProject={canReplaceProject}
+          onPathRenamed={onPathRenamed}
+          onPathDeleted={onPathDeleted}
         />
       </div>
       <div className={paneClass('toc')}>

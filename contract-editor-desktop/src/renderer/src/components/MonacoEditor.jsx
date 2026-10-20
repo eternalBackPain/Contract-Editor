@@ -2,7 +2,7 @@
 
 // Explaination: https://chatgpt.com/s/t_69257d9339a48191beb2b18a07f0a73f
 
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { monaco } from '../monaco'
 
 const EDITOR_THEME_NAME = 'contract-editor-theme'
@@ -17,11 +17,17 @@ The Contract Authority is not, by executing this MICTA:
 ### at any location where, or in respect of any project that, the Supplier may be required to supply goods, services and/or other activities.
 @end{GeneralConditions}`
 
-function MonacoEditor({ onChange, value }) {
+function MonacoEditor({ onChange, value, documentId, openDocumentIds }) {
   const containerRef = useRef(null)
   const editorRef = useRef(null)
+  const modelsRef = useRef(new Map())
+  const currentIdRef = useRef(null)
+  const onChangeRef = useRef(onChange)
+  useLayoutEffect(() => {
+    onChangeRef.current = onChange
+  }, [onChange])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!containerRef.current) return
 
     monaco.editor.defineTheme(EDITOR_THEME_NAME, {
@@ -43,7 +49,7 @@ function MonacoEditor({ onChange, value }) {
     })
 
     const editor = monaco.editor.create(containerRef.current, {
-      value: value ?? DEFAULT_EDITOR_TEXT,
+      model: null,
       language: 'plaintext',
       theme: EDITOR_THEME_NAME,
       automaticLayout: true,
@@ -65,29 +71,42 @@ function MonacoEditor({ onChange, value }) {
 
     const disposable = editor.onDidChangeModelContent(() => {
       const nextValue = editor.getValue()
-      if (onChange) {
-        onChange(nextValue)
-      }
+      onChangeRef.current?.(nextValue)
     })
-
-    if (onChange) {
-      onChange(editor.getValue())
-    }
 
     return () => {
       disposable.dispose()
       editor.dispose()
+      for (const entry of modelsRef.current.values()) entry.model.dispose()
+      modelsRef.current.clear()
       editorRef.current = null
     }
   }, [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const editor = editorRef.current
-    if (!editor || typeof value !== 'string') return
-    if (editor.getValue() !== value) {
-      editor.setValue(value)
+    if (!editor) return
+    const models = modelsRef.current
+    const previous = models.get(currentIdRef.current)
+    if (currentIdRef.current !== documentId || !editor.getModel()) {
+      if (previous) previous.viewState = editor.saveViewState()
+      let entry = models.get(documentId)
+      if (!entry) {
+        entry = { model: monaco.editor.createModel(value ?? DEFAULT_EDITOR_TEXT, 'plaintext') }
+        models.set(documentId, entry)
+      }
+      editor.setModel(entry.model)
+      if (entry.viewState) editor.restoreViewState(entry.viewState)
+      currentIdRef.current = documentId
+      editor.focus()
     }
-  }, [value])
+    for (const [id, entry] of models) {
+      if (!openDocumentIds.includes(id)) {
+        entry.model.dispose()
+        models.delete(id)
+      }
+    }
+  }, [documentId, openDocumentIds, value])
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 }

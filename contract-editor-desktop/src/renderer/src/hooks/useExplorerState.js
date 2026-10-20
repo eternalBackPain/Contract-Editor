@@ -156,6 +156,7 @@ export function useExplorerState({ openFilePath = '', onOpenFile }) {
     }
 
     await loadChildren(root.path, { force: true })
+    return root
   }, [loadChildren])
 
   const toggleFolder = useCallback(
@@ -323,7 +324,8 @@ export function useExplorerState({ openFilePath = '', onOpenFile }) {
               const oldNode = next[path]
               if (!oldNode) return
 
-              const rebasedPath = path === targetPath ? nextPath : path.replace(targetPath, nextPath)
+              const rebasedPath =
+                path === targetPath ? nextPath : path.replace(targetPath, nextPath)
               pathMap[path] = rebasedPath
 
               const rebasedNode = {
@@ -411,7 +413,9 @@ export function useExplorerState({ openFilePath = '', onOpenFile }) {
             removeSubtree(next, targetPath)
             const parent = next[parentPath]
             if (parent?.type === 'folder') {
-              parent.childPaths = (parent.childPaths || []).filter((childPath) => childPath !== targetPath)
+              parent.childPaths = (parent.childPaths || []).filter(
+                (childPath) => childPath !== targetPath
+              )
             }
             return next
           })
