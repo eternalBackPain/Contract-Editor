@@ -97,9 +97,15 @@ function isDefaultProfile(profile) {
 function App() {
   const [initialLayoutPrefs] = useState(() => loadWorkspaceLayoutPrefs())
   const [initialStyleOverride] = useState(() => loadWorkspaceStylePrefs())
-  const [editorText, setEditorText] = useState(INITIAL_EDITOR_TEXT)
-  const [lastSavedText, setLastSavedText] = useState(INITIAL_EDITOR_TEXT)
+  const [documents, setDocuments] = useState([
+    { id: 'scratch', path: '', text: INITIAL_EDITOR_TEXT, savedText: INITIAL_EDITOR_TEXT }
+  ])
   const [activeFilePath, setActiveFilePath] = useState('')
+  const activeDocument = documents.find((document) => document.path === activeFilePath)
+  const editorText = activeDocument?.text ?? ''
+  const lastSavedText = activeDocument?.savedText ?? ''
+  const [editorSession, setEditorSession] = useState(0)
+  const [saveError, setSaveError] = useState('')
   const [HTMLText, setHTMLText] = useState('')
   const [styleProfileOverride, setStyleProfileOverride] = useState(initialStyleOverride)
   const [styleDraftText, setStyleDraftText] = useState(() => formatStyleDraft(initialStyleOverride))
@@ -116,12 +122,22 @@ function App() {
   const saveBadgeTimerRef = useRef(null)
   const isDirty = editorText !== lastSavedText
   const currentFileLabel = fileNameFromPath(activeFilePath)
-  const saveLabel = activeFilePath ? (isDirty ? 'Unsaved changes' : 'Saved') : 'Scratch buffer'
+  const saveLabel = activeDocument?.deleted
+    ? 'Deleted from disk'
+    : activeFilePath
+      ? isDirty
+        ? 'Unsaved changes'
+        : 'Saved'
+      : 'Scratch buffer'
   const wordCount = countWords(editorText)
   const isUsingDefaultStyle = isDefaultProfile(styleProfileOverride)
 
   function handleOnChange(value) {
-    setEditorText(value)
+    setDocuments((current) =>
+      current.map((document) =>
+        document.path === activeFilePath ? { ...document, text: value } : document
+      )
+    )
   }
 
   const compilePreview = useCallback((source, styleOverride) => {
@@ -172,11 +188,16 @@ function App() {
   }, [])
 
   const handleSaveCurrentFile = useCallback(async () => {
-    if (!activeFilePath || !window.api?.writeFile) return
+    if (!activeFilePath || activeDocument?.deleted || !window.api?.writeFile) return
 
     try {
       await window.api.writeFile(activeFilePath, editorText)
-      setLastSavedText(editorText)
+      setDocuments((current) =>
+        current.map((document) =>
+          document.id === activeDocument.id ? { ...document, savedText: editorText } : document
+        )
+      )
+      setSaveError('')
       setShowSaveBadge(true)
       setSaveBadgeVersion((version) => version + 1)
       if (saveBadgeTimerRef.current) {
@@ -187,8 +208,9 @@ function App() {
       }, 1200)
     } catch (error) {
       console.error('Failed to save file:', error)
+      setSaveError(`Could not save ${currentFileLabel}: ${error.message}`)
     }
-  }, [activeFilePath, editorText])
+  }, [activeDocument, activeFilePath, currentFileLabel, editorText])
 
   useEffect(() => {
     if (!window.api?.onMenuSave) return undefined
@@ -220,16 +242,82 @@ function App() {
   }, [compilePreview, editorText, styleProfileOverride])
 
   function handleFileSelect(content, node) {
-    setEditorText(content)
-    setLastSavedText(content)
-    setActiveFilePath(node?.path || '')
+    const path = node?.path || ''
+    setDocuments((current) =>
+      current.some((document) => document.path === path)
+        ? current
+        : [...current, { id: crypto.randomUUID(), path, text: content, savedText: content }]
+    )
+    setActiveFilePath(path)
   }
 
   function handleProjectOpened() {
+    setEditorSession((session) => session + 1)
+    setDocuments([{ id: 'scratch', path: '', text: '', savedText: '' }])
     setActiveFilePath('')
-    setEditorText('')
-    setLastSavedText('')
   }
+
+  function handlePathRenamed(oldPath, nextPath) {
+    const rebase = (path) =>
+      path === oldPath || path.startsWith(`${oldPath}/`) || path.startsWith(`${oldPath}\\`)
+        ? nextPath + path.slice(oldPath.length)
+        : path
+    setDocuments((current) =>
+      current.map((document) => ({ ...document, path: rebase(document.path) }))
+    )
+    setActiveFilePath((current) => rebase(current))
+  }
+
+  function handlePathDeleted(path) {
+    const matches = (item) =>
+      item.path === path || item.path.startsWith(`${path}/`) || item.path.startsWith(`${path}\\`)
+    // Keep deleted drafts in memory, but detach them from disk to prevent accidental recreation.
+    setDocuments((current) =>
+      current.map((item) =>
+        matches(item) ? { ...item, path: `deleted:${item.path}`, deleted: true } : item
+      )
+    )
+    if (matches({ path: activeFilePath })) {
+      setActiveFilePath(`deleted:${activeFilePath}`)
+    }
+  }
+
+  function canReplaceProject() {
+    return (
+      !documents.some((document) => document.text !== document.savedText) ||
+      window.confirm('Discard unsaved changes and open another folder?')
+    )
+  }
+
+  function closeDocument(path) {
+    const document = documents.find((item) => item.path === path)
+    if (
+      document.text !== document.savedText &&
+      !window.confirm('Discard unsaved changes to this draft?')
+    )
+      return
+    const remaining = documents.filter((item) => item.path !== path)
+    if (!remaining.length) setEditorSession((session) => session + 1)
+    setDocuments(
+      remaining.length ? remaining : [{ id: 'scratch', path: '', text: '', savedText: '' }]
+    )
+    if (activeFilePath === path)
+      setActiveFilePath(remaining[Math.max(0, documents.indexOf(document) - 1)]?.path || '')
+  }
+
+  useEffect(() => {
+    const beforeUnload = (event) => {
+      if (
+        documents.some((document) => document.text !== document.savedText) &&
+        !window.confirm('Discard unsaved changes and close the window?')
+      ) {
+        event.preventDefault()
+        event.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', beforeUnload)
+    return () => window.removeEventListener('beforeunload', beforeUnload)
+  }, [documents])
 
   function clamp(val, min, max) {
     return Math.min(Math.max(val, min), max)
@@ -308,6 +396,9 @@ function App() {
               onFileSelect={handleFileSelect}
               selectedFilePath={activeFilePath}
               onProjectOpened={handleProjectOpened}
+              canReplaceProject={canReplaceProject}
+              onPathRenamed={handlePathRenamed}
+              onPathDeleted={handlePathDeleted}
               formattingState={{
                 draftText: styleDraftText,
                 parseError: styleParseError,
@@ -331,9 +422,51 @@ function App() {
             <header className="pane-header">
               <span className="pane-title">{currentFileLabel}</span>
               <span className={`pane-meta ${isDirty ? 'is-dirty' : ''}`}>{saveLabel}</span>
+              <button
+                type="button"
+                className="pane-header-button"
+                disabled={!activeFilePath || activeDocument?.deleted || !isDirty}
+                onClick={handleSaveCurrentFile}
+              >
+                Save
+              </button>
             </header>
+            <div className="document-tabs" role="tablist" aria-label="Open drafts">
+              {documents.map((document) => (
+                <div className="document-tab" key={document.path}>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={document.path === activeFilePath}
+                    title={document.path || 'Untitled draft'}
+                    onClick={() => setActiveFilePath(document.path)}
+                  >
+                    {fileNameFromPath(document.path)}
+                    {document.text !== document.savedText ? ' •' : ''}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Close ${fileNameFromPath(document.path)}`}
+                    onClick={() => closeDocument(document.path)}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+            {saveError && (
+              <p role="alert" className="workspace-error">
+                {saveError}
+              </p>
+            )}
             <div className="pane-body">
-              <EditorPane onChange={handleOnChange} value={editorText} />
+              <EditorPane
+                onChange={handleOnChange}
+                value={editorText}
+                key={editorSession}
+                documentId={activeDocument?.id}
+                openDocumentIds={documents.map((document) => document.id)}
+              />
             </div>
           </div>
           {showPreview ? (

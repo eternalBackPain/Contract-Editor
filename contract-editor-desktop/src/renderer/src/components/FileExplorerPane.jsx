@@ -14,7 +14,14 @@ function fileNameFromPath(path) {
   return idx === -1 ? normalized : normalized.slice(idx + 1)
 }
 
-function FileExplorerPane({ onFileSelect, selectedFilePath = '', onProjectOpened }) {
+function FileExplorerPane({
+  onFileSelect,
+  selectedFilePath = '',
+  onProjectOpened,
+  canReplaceProject,
+  onPathRenamed,
+  onPathDeleted
+}) {
   const {
     projectRoot,
     nodeMap,
@@ -48,13 +55,15 @@ function FileExplorerPane({ onFileSelect, selectedFilePath = '', onProjectOpened
   useEffect(() => {
     if (!window.api?.onMenuOpenProject) return undefined
     const unsubscribe = window.api.onMenuOpenProject(async () => {
-      await openProject()
+      if (canReplaceProject && !canReplaceProject()) return
+      const root = await openProject()
+      if (!root) return
       setInlineEdit(null)
       setContextMenu(null)
       if (onProjectOpened) onProjectOpened()
     })
     return unsubscribe
-  }, [onProjectOpened, openProject])
+  }, [canReplaceProject, onProjectOpened, openProject])
 
   useEffect(() => {
     if (!projectRoot?.path || !containerRef.current) return
@@ -98,7 +107,9 @@ function FileExplorerPane({ onFileSelect, selectedFilePath = '', onProjectOpened
   }, [inlineEdit, visibleRows])
 
   async function handleOpenProjectClick() {
-    await openProject()
+    if (canReplaceProject && !canReplaceProject()) return
+    const root = await openProject()
+    if (!root) return
     setInlineEdit(null)
     setContextMenu(null)
     if (onProjectOpened) onProjectOpened()
@@ -127,7 +138,12 @@ function FileExplorerPane({ onFileSelect, selectedFilePath = '', onProjectOpened
     }
 
     if (inlineEdit.mode === 'rename') {
-      await renamePath(inlineEdit.targetPath, value)
+      const oldPath = inlineEdit.targetPath
+      if (await renamePath(oldPath, value)) {
+        const separator = oldPath.includes('\\') ? '\\' : '/'
+        const nextPath = oldPath.slice(0, oldPath.lastIndexOf(separator) + 1) + value
+        onPathRenamed?.(oldPath, nextPath)
+      }
       setInlineEdit(null)
       return
     }
@@ -146,7 +162,7 @@ function FileExplorerPane({ onFileSelect, selectedFilePath = '', onProjectOpened
     if (!node) return
     const confirmed = window.confirm(`Delete ${node.name}?`)
     if (!confirmed) return
-    await deletePath(targetPath)
+    if (await deletePath(targetPath)) onPathDeleted?.(targetPath)
   }
 
   async function handleKeyDown(event) {
