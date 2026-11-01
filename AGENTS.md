@@ -1,80 +1,104 @@
 # AGENTS.md
 
-## Scope and Repository Boundaries
-- Sole application codebase: `contract-editor-desktop`.
-- Keep changes focused in `contract-editor-desktop` unless the user explicitly asks to update repository-level documentation or configuration.
+Instructions for AI coding agents working in this project. This is the cross-tool
+entry point. Codex, Google Antigravity, and OpenCode read `AGENTS.md`. Other
+compatible tools do too. Claude Code reads `CLAUDE.md`, which imports this file,
+so there is a single source of truth.
 
-## Project Overview
-- `contract-editor-desktop` is an Electron desktop app for drafting contracts with a split editor/preview workflow.
-- Stack: Electron + Vite + React, with shared parser/transform logic in `packages/core` and IPC bridge through preload.
-- Process boundaries:
-  - `src/main`: Electron main process, native APIs, filesystem access, IPC handlers.
-  - `src/preload`: safe API surface exposed to the renderer via `contextBridge`.
-  - `src/renderer`: React UI, editor experience, and rendering orchestration.
-  - `packages/core`: shared parser/validator/compiler logic consumed by the renderer and CLI.
-  - `packages/cli`: `contractc` command line workflows built on `packages/core`.
+Claude Code, Codex, and every other AI tool must not add AI attribution to
+commits or pull requests, including AI `Co-Authored-By` trailers or generated-by
+signatures. Preserve genuine human attribution. See
+[Commit and PR attribution](blueprint/context/ai-interaction.md#commit-and-pr-attribution)
+for optional tool settings.
 
-## Implementation Philosophy
-- Implement the most minimal version of a feature first unless the user explicitly asks for additional capability.
-- Prefer small, composable changes over broad rewrites.
-- Avoid speculative abstractions and optional behaviors unless they are required by the request.
-- Keep public API changes small and explicit.
-- Keep stylistic changes consistent with the overall 'look and feel' of the application
+## What this is
 
-## Build and Test Commands
-Run commands from `contract-editor-desktop`.
+Contract Editor is a desktop drafting tool for lawyers, combining structured contract markup with a live rendered preview. The active npm workspace application is in `contract-editor-desktop/`, with a shared language core and CLI.
 
-- Install dependencies: `npm install`
-- Start dev app: `npm run dev`
+This project is built with the **AI Blueprint**, a workflow layer, not an
+app skeleton. To start a new project, scaffold the app first in an empty folder
+(create-next-app, Vite, etc.), then overlay these files on top. Never run a
+framework scaffolder inside a directory that already holds the blueprint files
+(`AGENTS.md`, `CLAUDE.md`, `.agents/`, `.claude/`, `blueprint/`); it fails
+because the directory isn't empty.
+
+The workflow is defined by the local skills and context files below.
+
+## Proportional engineering
+
+Build for established requirements, not hypothetical scale, threats, or future
+flexibility. Reuse existing code, the standard library, native platform features,
+and installed dependencies before adding machinery.
+
+- Unknown scale or extensibility defaults to the smaller reversible design. Do
+  not infer enterprise, multi-tenant, hostile-user, or compliance requirements.
+- Derive trust and data-integrity boundaries from actual reachability: untrusted
+  input, auth/session/ownership, shared persisted data, destructive operations,
+  payments, secrets, and sensitive data.
+- Ask only when an unknown materially changes behavior, architecture, persisted
+  data, interoperability, a real security boundary, or cost. Otherwise choose the
+  simplest repository-native implementation.
+- Add an abstraction, dependency, service, configuration surface, compatibility
+  layer, or security mechanism only for a current requirement.
+- Simplicity never removes real trust-boundary validation, data-loss prevention,
+  accessibility, explicit security requirements, configured tests, or project rules.
+- Stack-specific template standards apply only when the project uses that stack.
+
+## Read these when relevant
+
+- `blueprint/config.json` - deterministic project workflow settings
+- `blueprint/workflow.md` - workflow reference for configuration, skills, dashboard activity, and checks
+- `blueprint/context/project-overview.md` - the project's source of truth
+- `blueprint/context/coding-standards.md` - read before changing code
+- `blueprint/context/ai-interaction.md` - read when running the Blueprint workflow
+- `blueprint/context/current-feature.md` - the one feature, fix, or rollback being built in this checkout
+
+Reuse relevant context already loaded in the session. Claude Code imports only
+this file; its Blueprint skills load the other files on demand.
+
+## Workflow
+
+Build one feature, fix, or rollback at a time, behind review gates. The feature
+loop is `/feature` -> `/implement` -> `/check` -> `/audit current` ->
+`/complete`; approve the Feature spec before Implement. Each command is a local
+skill at `.agents/skills/<skill>/SKILL.md` or `.claude/skills/<skill>/SKILL.md`
+that carries its own instructions. Claude Code and Google Antigravity use slash
+commands such as `/feature`, Codex uses `$feature`, and other tools can follow
+the matching `SKILL.md` when asked.
+
+Skills: `adopt`, `audit`, `blueprint-doctor`, `blueprint-status`, `brief`,
+`check`, `ci`, `complete`, `debug`, `discovery`, `explore`, `feature`, `fix`,
+`implement`, `onboard`, `overview`, `prototype`, `release`, `rollback`, and
+`tests`, plus the explicit-only `autopilot` and `continuous`.
+
+- Keep one active work item per checkout. Parallel work needs its own clone or
+  Git worktree and branch; never replace another worker's active spec.
+- `blueprint/config.json` can make review or verification stricter and tune
+  local workflow settings. It never grants permission to commit, merge, push,
+  deploy, publish, send, delete data, waive a failing check, or accept a finding.
+- Never create or edit `blueprint/.state/run.json` directly. Tracked skills
+  record dashboard activity through the managed helper.
+
+## Commands
+
+Run all commands from `contract-editor-desktop/` (the repository root has no
+package.json). Use npm with the existing package-lock.json.
+
+- Dev app: `npm run dev` (Electron desktop, not a Next.js server)
+- Build: `npm run build`
 - Preview built app: `npm run start`
 - Lint: `npm run lint`
-- Format: `npm run format`
-- Build (bundle only): `npm run build`
-- Package by platform:
-  - Windows: `npm run build:win`
-  - macOS: `npm run build:mac`
-  - Linux: `npm run build:linux`
-  - Unpacked artifact: `npm run build:unpack`
+- Format: `npm run format` (writes formatting changes)
+- Test: `npm run test` (Node test runner for core and CLI)
+- Core tests: `npm run test:core`
+- CLI tests: `npm run test:cli`
+- Browser tests: `npm run test:smoke` (builds and drives the Electron app with Playwright Core)
+- Unpacked desktop package: `npm run build:unpack`
+- Platform packages: `npm run build:win`, `npm run build:mac`, `npm run build:linux`
+- CLI help: `node packages/cli/bin/contractc.js --help`
 
-## Code Style Guidelines
-- Follow existing configs in `contract-editor-desktop`:
-  - `.editorconfig`: UTF-8, LF, 2 spaces, trim trailing whitespace.
-  - `.prettierrc.yaml`: single quotes, no semicolons, print width 100, no trailing commas.
-  - `eslint.config.mjs`: Electron toolkit + React + React Hooks + React Refresh rules.
-- Keep functions focused and side effects explicit.
-- For Electron code:
-  - Keep OS/file/IPC logic in `main`.
-  - Expose only narrowly scoped capabilities from `preload`.
-  - Keep renderer code free of direct Node/Electron privileged access.
-- Match existing naming and file organization before introducing new patterns.
-
-## Testing Instructions
-- There is currently no dedicated automated unit/integration test runner configured.
-- Minimum validation for every change:
-  - `npm run lint`
-  - `npm run build`
-  - Manual smoke test in `npm run dev` for the changed flow.
-- For filesystem or IPC changes, manually verify:
-  - open project folder
-  - list/read/write behavior
-  - create/rename/delete behavior
-  - error handling for invalid/out-of-scope paths
-- If adding substantial logic, prefer introducing targeted tests and corresponding scripts in a follow-up (or within the same change if requested).
-
-## Security Considerations (Electron)
-- Maintain strict process separation:
-  - keep privileged operations in `main`
-  - keep `preload` as a narrow, explicit bridge
-  - renderer should consume only vetted bridge APIs
-- Do not expose raw `ipcRenderer`, filesystem primitives, or broad command execution surfaces to the renderer.
-- Validate and sanitize all IPC inputs in `main` before use.
-- Enforce path boundaries for filesystem actions (for example, only within the active/opened project root).
-- Avoid loading remote content in BrowserWindow; prefer local bundled assets.
-- Treat any user-provided file content/path as untrusted input.
-- Prefer default-deny behavior for unsupported file types/actions and return explicit errors.
-
-## Agent Workflow Expectations
-- Before coding, confirm target area is in `contract-editor-desktop`.
-- Keep diffs tight and directly tied to the request.
-- Update docs when commands, architecture boundaries, or behavior change.
-- If assumptions are required, choose the most conservative/minimal option and state it.
+Tests are configured and are a gate for changes to application logic. Use focused
+core/CLI tests for parser, compiler, validation, and command behavior; use the
+Electron smoke harness and direct observation for desktop interactions. There is
+no configured typecheck or combined Verify command. No GitHub Actions workflow
+was found during adoption. Run build and tests as the fallback automated gate.
