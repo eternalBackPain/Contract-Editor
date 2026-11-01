@@ -4,7 +4,8 @@ import { electronAPI } from '@electron-toolkit/preload'
 let projectWatchListener = null
 
 const api = {
-  openProjectFolder: () => ipcRenderer.invoke('open-project-folder'),
+  openProjectFolder: (withExample = false) =>
+    ipcRenderer.invoke('open-project-folder', withExample),
   listChildren: (dirPath) => ipcRenderer.invoke('list-children', dirPath),
   readFile: (filePath) => ipcRenderer.invoke('read-file', filePath),
   writeFile: (filePath, content) => ipcRenderer.invoke('write-file', filePath, content),

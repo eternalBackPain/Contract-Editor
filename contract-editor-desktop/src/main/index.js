@@ -1,3 +1,4 @@
+import { createExampleFile } from './example-file.mjs'
 import { app, shell, BrowserWindow, ipcMain, Menu, dialog } from 'electron'
 import { basename, dirname, extname, join, resolve } from 'path'
 import {
@@ -107,7 +108,7 @@ function assertInActiveRoot(targetPath) {
   }
 }
 
-async function openProjectFolder(browserWindow) {
+async function openProjectFolder(browserWindow, withExample = false) {
   const result = await dialog.showOpenDialog(browserWindow, {
     properties: ['openDirectory']
   })
@@ -115,13 +116,15 @@ async function openProjectFolder(browserWindow) {
   if (result.canceled || result.filePaths.length === 0) return null
 
   const rootPath = result.filePaths[0]
+  const exampleFile = withExample ? createExampleFile(rootPath) : null
   activeProjectRoot = rootPath
   startProjectWatcher(rootPath)
 
   return {
     type: 'folder',
     name: basename(rootPath),
-    path: rootPath
+    path: rootPath,
+    exampleFile
   }
 }
 
@@ -262,11 +265,12 @@ function createWindow() {
   }
 }
 
-ipcMain.handle('open-project-folder', async (event) => {
+ipcMain.handle('open-project-folder', async (event, withExample = false) => {
+  if (typeof withExample !== 'boolean') throw new Error('Invalid example option')
   const targetWindow =
     BrowserWindow.fromWebContents(event.sender) || BrowserWindow.getFocusedWindow()
   if (!targetWindow) return null
-  return openProjectFolder(targetWindow)
+  return openProjectFolder(targetWindow, withExample)
 })
 
 ipcMain.handle('list-children', async (_event, dirPath) => {

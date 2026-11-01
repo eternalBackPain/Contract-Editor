@@ -31,36 +31,62 @@ async function run() {
     const window = await app.firstWindow()
     await window.waitForSelector('.workspace-shell', { timeout: 15000 })
 
-    const initialPreviewHeading = window.locator('.output-document h1').first()
-    await initialPreviewHeading.waitFor({ timeout: 15000 })
-
-    const initialText = (await initialPreviewHeading.textContent())?.trim()
-    assert.ok(initialText && initialText.length > 0, 'Initial preview heading should render')
-
-    const editorSurface = window.locator('.monaco-editor .view-lines').first()
-    await editorSurface.click({ timeout: 15000, position: { x: 10, y: 10 } })
-    await window.keyboard.press(`${modifierKey()}+A`)
-    await window.keyboard.insertText(SMOKE_SOURCE)
-
-    await window.waitForFunction(
-      () => document.querySelector('.output-document h1')?.textContent?.trim() === 'Smoke Title',
-      undefined,
-      { timeout: 15000 }
+    await window.getByRole('heading', { name: 'Your contracts, on your computer' }).waitFor()
+    assert.equal(await window.locator('.monaco-editor').count(), 0)
+    assert.equal(await window.locator('.output-document').count(), 0)
+    assert.equal(await window.getByRole('button', { name: 'Open existing file' }).count(), 0)
+    if (process.env.CONTRACT_EDITOR_SMOKE_SCREENSHOT) {
+      await window.screenshot({
+        path: process.env.CONTRACT_EDITOR_SMOKE_SCREENSHOT + '.welcome.png'
+      })
+    }
+    await app.evaluate(({ dialog }) => {
+      dialog.showOpenDialog = async () => ({ canceled: true, filePaths: [] })
+    })
+    await window.getByRole('button', { name: 'Open Folder', exact: true }).click()
+    await window
+      .getByRole('button', { name: 'Open Folder (with example file)', exact: true })
+      .click()
+    assert.equal(await window.locator('.monaco-editor').count(), 0)
+    await app.evaluate(
+      ({ dialog }, target) => {
+        dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [target] })
+      },
+      join(fixture, 'missing-folder')
     )
-
-    const renderedBody = await window.locator('.output-document p').first().textContent()
-    assert.match(renderedBody || '', /Smoke body paragraph\./)
-
+    await window
+      .getByRole('button', { name: 'Open Folder (with example file)', exact: true })
+      .click()
+    await window.getByRole('alert').filter({ hasText: 'Could not open folder' }).waitFor()
+    assert.equal(await window.locator('.output-document').count(), 0)
     await app.evaluate(({ dialog }, fixture) => {
       dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [fixture] })
     }, fixture)
+    await window.getByRole('button', { name: 'Open Folder', exact: true }).click()
+    await window.getByRole('tree', { name: 'File Explorer', exact: true }).waitFor()
+    assert.equal(await window.locator('.output-document').count(), 0)
+    await window.reload()
+    await window
+      .getByRole('button', { name: 'Open Folder (with example file)', exact: true })
+      .waitFor()
+    await writeFile(join(fixture, 'example.contract'), 'Keep my original')
+    await window
+      .getByRole('button', { name: 'Open Folder (with example file)', exact: true })
+      .click()
+    await window.getByRole('tab', { name: 'example-1.contract', exact: true }).waitFor()
+    await window.locator('.output-document h1').first().waitFor()
+    assert.equal(await readFile(join(fixture, 'example.contract'), 'utf8'), 'Keep my original')
+    assert.match(await readFile(join(fixture, 'example-1.contract'), 'utf8'), /No guarantee/)
+    await window.getByRole('treeitem', { name: 'example-1.contract', exact: true }).waitFor()
+    await window.getByRole('button', { name: 'Close example-1.contract', exact: true }).click()
+    await window.getByRole('heading', { name: 'Your contracts, on your computer' }).waitFor()
+    const editorSurface = window.locator('.monaco-editor .view-lines').first()
     await window.evaluate(() => {
       window.confirm = () => true
     })
-    await window.getByRole('button', { name: 'Open Folder', exact: true }).click()
     const tree = window.getByRole('tree', { name: 'File Explorer', exact: true })
     await tree.focus()
-    await window.keyboard.press('ArrowUp')
+    await window.keyboard.press('Home')
     await window.getByRole('button', { name: 'New File', exact: true }).click()
     await window.locator('.explorer-inline-input').fill('created.contract')
     await window.keyboard.press('Enter')
@@ -74,6 +100,7 @@ async function run() {
     await window.locator('.explorer-inline-input').waitFor({ state: 'detached' })
     await window.getByRole('treeitem', { name: 'created-folder', exact: true }).waitFor()
     await window.getByRole('treeitem', { name: 'created.contract', exact: true }).click()
+    await window.getByRole('tab', { name: 'created.contract', exact: true }).waitFor()
     await window.evaluate(() => {
       window.confirm = () => false
     })

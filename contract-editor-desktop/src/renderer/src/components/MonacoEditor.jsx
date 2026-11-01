@@ -7,16 +7,6 @@ import { monaco } from '../monaco'
 
 const EDITOR_THEME_NAME = 'contract-editor-theme'
 
-const DEFAULT_EDITOR_TEXT = `@begin{GeneralConditions}
-# No guarantee of work or exclusivity
-The Contract Authority is not, by executing this MICTA:
-## bound to issue any Order Proposal to the Supplier;
-## bound to engage the Supplier to supply any goods, services and/or other activities or to enter into any Contract; or
-## restricted in any way from engaging any other person to supply any goods, services and/or other activities:
-### of any type, including goods, services and/or other activities that are the same as or similar to any Supplier's Activities or ICT Activities; or
-### at any location where, or in respect of any project that, the Supplier may be required to supply goods, services and/or other activities.
-@end{GeneralConditions}`
-
 function MonacoEditor({ onChange, value, documentId, openDocumentIds, onReady }) {
   const containerRef = useRef(null)
   const editorRef = useRef(null)
@@ -105,7 +95,7 @@ function MonacoEditor({ onChange, value, documentId, openDocumentIds, onReady })
       if (previous) previous.viewState = editor.saveViewState()
       let entry = models.get(documentId)
       if (!entry) {
-        entry = { model: monaco.editor.createModel(value ?? DEFAULT_EDITOR_TEXT, 'plaintext') }
+        entry = { model: monaco.editor.createModel(value ?? '', 'plaintext') }
         models.set(documentId, entry)
       }
       editor.setModel(entry.model)

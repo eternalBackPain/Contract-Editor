@@ -46,6 +46,10 @@ function FileExplorerPane({
     deletePath
   } = useExplorerState({ openFilePath: selectedFilePath, onOpenFile: onFileSelect })
 
+  const [opening, setOpening] = useState(false)
+  const openingRef = useRef(false)
+  const [openError, setOpenError] = useState('')
+
   const [inlineEdit, setInlineEdit] = useState(null)
   const [inlineValue, setInlineValue] = useState('')
   const [contextMenu, setContextMenu] = useState(null)
@@ -55,16 +59,9 @@ function FileExplorerPane({
 
   useEffect(() => {
     if (!window.api?.onMenuOpenProject) return undefined
-    const unsubscribe = window.api.onMenuOpenProject(async () => {
-      if (canReplaceProject && !canReplaceProject()) return
-      const root = await openProject()
-      if (!root) return
-      setInlineEdit(null)
-      setContextMenu(null)
-      if (onProjectOpened) onProjectOpened(root)
-    })
+    const unsubscribe = window.api.onMenuOpenProject(() => handleOpenProjectClick())
     return unsubscribe
-  }, [canReplaceProject, onProjectOpened, openProject])
+  })
 
   useEffect(() => {
     if (!projectRoot?.path || !containerRef.current) return
@@ -107,13 +104,24 @@ function FileExplorerPane({
     return nextRows
   }, [inlineEdit, visibleRows])
 
-  async function handleOpenProjectClick() {
+  async function handleOpenProjectClick(withExample = false) {
+    if (openingRef.current) return
     if (canReplaceProject && !canReplaceProject()) return
-    const root = await openProject()
-    if (!root) return
-    setInlineEdit(null)
-    setContextMenu(null)
-    if (onProjectOpened) onProjectOpened(root)
+    openingRef.current = true
+    setOpening(true)
+    setOpenError('')
+    try {
+      const root = await openProject(withExample)
+      if (!root) return
+      setInlineEdit(null)
+      setContextMenu(null)
+      onProjectOpened?.(root)
+    } catch (error) {
+      setOpenError(`Could not open folder: ${error.message}`)
+    } finally {
+      openingRef.current = false
+      setOpening(false)
+    }
   }
 
   function beginCreate(mode, folderPath) {
@@ -271,9 +279,30 @@ function FileExplorerPane({
     return (
       <div className="explorer-empty-state">
         <p className="explorer-empty-title">No project open</p>
-        <button type="button" className="explorer-action-button" onClick={handleOpenProjectClick}>
+        <button
+          type="button"
+          className="explorer-action-button"
+          disabled={opening}
+          aria-describedby={openError ? 'open-folder-error' : undefined}
+          onClick={() => handleOpenProjectClick()}
+        >
           Open Folder
         </button>
+        <button
+          type="button"
+          className="explorer-action-button"
+          disabled={opening}
+          aria-describedby={openError ? 'open-folder-error' : undefined}
+          onClick={() => handleOpenProjectClick(true)}
+        >
+          Open Folder (with example file)
+        </button>
+        {opening && <p role="status">Opening folder...</p>}
+        {openError && (
+          <p id="open-folder-error" className="workspace-error" role="alert">
+            {openError}
+          </p>
+        )}
       </div>
     )
   }
@@ -318,6 +347,11 @@ function FileExplorerPane({
         />
       </div>
 
+      {openError && (
+        <p id="open-folder-error" className="workspace-error" role="alert">
+          {openError}
+        </p>
+      )}
       {error && (
         <p className="workspace-error" role="alert">
           {error}

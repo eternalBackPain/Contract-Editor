@@ -1,6 +1,6 @@
 # Contract Editor - Project Overview
 
-<!-- blueprint:source-hash 6325d342191e1d38d5f2a615523e75256d60a513c75db06d799f923df55dd02c -->
+<!-- blueprint:source-hash d1a6b4005ce59fe454a6d53bfb9e162df7462341842bfe13c46bf21a2f53fa5b -->
 
 > A desktop drafting tool for lawyers combining structured contract markup with a live rendered contract.
 
@@ -42,6 +42,7 @@ runtime behavior or published releases. Items 7-9 are the planned direction.
 6. **Command line tools** - Validation and XML/HTML compilation through the shared core, optional file output and HTML styles.
 7. **Complete the contract markup language** - Define and implement the next language constructs consistently in core and CLI.
 8. **Develop the contract editing experience** - Improve drafting/navigation using Obsidian and VS Code as references.
+   - **8a. Local-file welcome flow (selected next)** - Folder-first File Explorer with Open Folder and Open Folder (with example file); render only files read/created on disk.
 9. **Add lawyer-focused word-processing tools** - Implement selected contract-editing capabilities expected by practicing lawyers.
 
 Planned direction within items 7-9 includes declarative definitions,
@@ -53,6 +54,31 @@ Existing folder browsing does not establish multi-file compilation; Monaco alone
 does not establish contract-aware assistance.
 
 Defined Terms and Table of Contents panels are placeholders, not completed capabilities.
+
+## Markup language direction
+
+User intent, not a claim of implemented syntax:
+
+- @ introduces commands; @commandName{id} illustrates an identifier argument.
+- @begin{GeneralConditions} and matching @end{GeneralConditions} delimit a
+  block with distinct rules/styles. Typical blocks: cover/title, general
+  conditions, schedules, annexures; heading styles can differ by block.
+- # and ## express clause/heading levels 1 and 2. Marked text can be a title or
+  clause text; unmarked continuation belongs to the clause without a separate
+  referenceable number. Exact newline/paragraph rules remain undecided.
+- Immediate next language priority: a define command for inline definitions and
+  terms defined elsewhere, including other schedules/blocks. Command spelling,
+  arguments, use syntax, scope, duplicates, and forward references need decisions.
+- Every clause should be referenceable, with references updating when the
+  contract changes; editor-assisted insertion follows later. ID assignment,
+  persistence, number display, and resolution semantics remain unspecified.
+
+Suggestions for review, not approved syntax: stable clause IDs separate from
+computed numbers (AsciiDoc custom IDs/xrefs); distinguish source wrapping from
+paragraphs and hard breaks (CommonMark); separate block identity from style
+roles (AsciiDoc ID/role attributes). Source links and the illustrative contract
+are in project-plan.md. Future language suggestions should cite existing markup
+precedents where available. Do not implement proposals as settled requirements.
 
 ## Data model
 
@@ -109,6 +135,17 @@ no web route model is specified. The earlier blog's web-hosted UI proposal is
 superseded by the current Electron desktop direction. Its LaTeX analogy motivates
 modularity, not a stack change.
 
+### Folder-first welcome behavior
+
+All drafting belongs to a selected folder. With no folder open, the File Explorer
+shows Open Folder and Open Folder (with example file), with no top file actions
+or example checkbox. Plain opening shows no editor/preview until file selection.
+The example option exclusively creates example.contract (or the first available
+example-N.contract) and opens it after writing. Existing files are never overwritten.
+Ordinary explorer New File remains blank. Closing the final tab retains the folder
+and shows the empty workspace. Cancel/errors preserve the previous workspace;
+folder-root authorization remains the only file-access model. Feature 8a is next.
+
 ## Deployment
 
 Ship a desktop app for Windows, macOS, and Linux. Electron packaging scripts exist
@@ -118,8 +155,8 @@ AGENTS.md. No hosting service or DOCX backend is established by the plans.
 
 ## Open questions
 
-- **Language scope:** specify the first constructs and semantics; references and
-  definitions are intended capabilities, but syntax and resolution rules remain unspecified.
+- **Language scope:** specify define-command semantics first; then decide clause IDs,
+  references, escaping, heading depth, block nesting, and multiline clause behavior.
 - **Feature size:** items 7-9 are milestones. Split into small approved features
   before implementation, preserving existing IDs when updating the plans.
 - **Editor and Word scope:** choose concrete capabilities. Full Word compatibility,

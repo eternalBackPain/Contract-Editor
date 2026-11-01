@@ -19,16 +19,6 @@ import {
   saveWorkspaceStylePrefs
 } from './lib/workspacePrefs'
 
-const INITIAL_EDITOR_TEXT = `@begin{GeneralConditions}
-# No guarantee of work or exclusivity
-The Contract Authority is not, by executing this MICTA:
-## bound to issue any Order Proposal to the Supplier;
-## bound to engage the Supplier to supply any goods, services and/or other activities or to enter into any Contract; or
-## restricted in any way from engaging any other person to supply any goods, services and/or other activities:
-### of any type, including goods, services and/or other activities that are the same as or similar to any Supplier's Activities or ICT Activities; or
-### at any location where, or in respect of any project that, the Supplier may be required to supply goods, services and/or other activities.
-@end{GeneralConditions}`
-
 function fileNameFromPath(path) {
   if (!path) return 'Untitled draft'
   const normalized = path.replace(/\\/g, '/')
@@ -99,9 +89,7 @@ function isDefaultProfile(profile) {
 function App() {
   const [initialLayoutPrefs] = useState(() => loadWorkspaceLayoutPrefs())
   const [initialStyleOverride] = useState(() => loadWorkspaceStylePrefs())
-  const [documents, setDocuments] = useState([
-    { id: 'scratch', path: '', text: INITIAL_EDITOR_TEXT, savedText: INITIAL_EDITOR_TEXT }
-  ])
+  const [documents, setDocuments] = useState([])
   const [activeFilePath, setActiveFilePath] = useState('')
   const activeDocument = documents.find((document) => document.path === activeFilePath)
   const editorText = activeDocument?.text ?? ''
@@ -127,6 +115,7 @@ function App() {
 
   const handleEditorReady = useCallback((editor) => {
     editorRef.current = editor
+    editor.focus()
     setWordWrap(editor.getOption(monaco.editor.EditorOption.wordWrap) !== 'off')
     const selection = editor.onDidChangeCursorSelection((event) => {
       const position = editor.getPosition()
@@ -165,7 +154,7 @@ function App() {
   const [activeExplorer, setActiveExplorer] = useState('files')
   const [explorerWidth, setExplorerWidth] = useState(initialLayoutPrefs.explorerWidth)
   const [editorWidth, setEditorWidth] = useState(initialLayoutPrefs.editorWidth)
-  const [showExplorer, setShowExplorer] = useState(initialLayoutPrefs.showExplorer)
+  const [showExplorer, setShowExplorer] = useState(true)
   const [showPreview, setShowPreview] = useState(initialLayoutPrefs.showPreview)
   const [zenMode, setZenMode] = useState(false)
   const [groupWidth, setGroupWidth] = useState(0)
@@ -244,7 +233,7 @@ function App() {
       ? isDirty
         ? 'Unsaved changes'
         : 'Saved'
-      : 'Scratch buffer'
+      : 'No file open'
   const wordCount = countWords(editorText)
   const isUsingDefaultStyle = isDefaultProfile(styleProfileOverride)
 
@@ -354,8 +343,9 @@ function App() {
   }, [editorWidth, explorerWidth, showExplorer, showPreview])
 
   useEffect(() => {
-    compilePreview(editorText, styleProfileOverride)
-  }, [compilePreview, editorText, styleProfileOverride])
+    if (activeDocument) compilePreview(editorText, styleProfileOverride)
+    else setHTMLText('')
+  }, [activeDocument, compilePreview, editorText, styleProfileOverride])
 
   function handleFileSelect(content, node) {
     const path = node?.path || ''
@@ -370,8 +360,9 @@ function App() {
   function handleProjectOpened(root) {
     setProjectRoot(root)
     setEditorSession((session) => session + 1)
-    setDocuments([{ id: 'scratch', path: '', text: '', savedText: '' }])
+    setDocuments([])
     setActiveFilePath('')
+    if (root.exampleFile) handleFileSelect(root.exampleFile.content, root.exampleFile)
   }
 
   function handlePathRenamed(oldPath, nextPath) {
@@ -432,9 +423,7 @@ function App() {
       return
     const remaining = documents.filter((item) => item.path !== path)
     if (!remaining.length) setEditorSession((session) => session + 1)
-    setDocuments(
-      remaining.length ? remaining : [{ id: 'scratch', path: '', text: '', savedText: '' }]
-    )
+    setDocuments(remaining)
     if (activeFilePath === path)
       setActiveFilePath(remaining[Math.max(0, documents.indexOf(document) - 1)]?.path || '')
   }
@@ -632,173 +621,194 @@ function App() {
           />
         ) : null}
         <div ref={editorOutputRef} className="workspace-editor-group">
-          <div
-            className={`workspace-pane workspace-editor-pane ${visiblePreview ? 'is-fixed' : 'is-flex'}`}
-            style={visiblePreview ? { width: effectiveEditorWidth } : undefined}
-          >
-            <header className="pane-header">
-              <span className="pane-title">{currentFileLabel}</span>
-              <button
-                type="button"
-                className="pane-header-button"
-                title="Quick Open (Ctrl+P / Cmd+P)"
-                onClick={() => setShowQuickOpen(true)}
+          {!activeDocument && (
+            <section className="welcome-panel" aria-labelledby="welcome-title">
+              <h1 id="welcome-title">Your contracts, on your computer</h1>
+              <p>Open a folder in File Explorer to start drafting.</p>
+              <p>Choose Open Folder (with example file) to try example drafting.</p>
+            </section>
+          )}
+          {activeDocument && (
+            <>
+              <div
+                className={`workspace-pane workspace-editor-pane ${visiblePreview ? 'is-fixed' : 'is-flex'}`}
+                style={visiblePreview ? { width: effectiveEditorWidth } : undefined}
               >
-                Quick Open
-              </button>
-              <span className={`pane-meta ${isDirty ? 'is-dirty' : ''}`}>{saveLabel}</span>
-              <button
-                type="button"
-                className="pane-header-button"
-                disabled={!activeFilePath || activeDocument?.deleted || !isDirty}
-                onClick={handleSaveCurrentFile}
-              >
-                Save
-              </button>
-            </header>
-            <div ref={tabsRef} className="document-tabs" role="tablist" aria-label="Open drafts">
-              {documents.map((document) => (
-                <div className="document-tab" key={document.id}>
+                <header className="pane-header">
+                  <span className="pane-title">{currentFileLabel}</span>
                   <button
                     type="button"
-                    role="tab"
-                    aria-selected={document.path === activeFilePath}
-                    tabIndex={document.path === activeFilePath ? 0 : -1}
-                    onKeyDown={(event) => {
-                      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
-                      event.preventDefault()
-                      const index = documents.indexOf(document)
-                      const next =
-                        event.key === 'Home'
-                          ? 0
-                          : event.key === 'End'
-                            ? documents.length - 1
-                            : (index + (event.key === 'ArrowRight' ? 1 : -1) + documents.length) %
-                              documents.length
-                      setActiveFilePath(documents[next].path)
-                      const tab = event.currentTarget
-                        .closest('[role="tablist"]')
-                        .querySelectorAll('[role="tab"]')[next]
-                      requestAnimationFrame(() => {
-                        tab.focus()
-                        tab
-                          .closest('.document-tab')
-                          .scrollIntoView({ block: 'nearest', inline: 'nearest' })
-                      })
-                    }}
-                    title={document.path || 'Untitled draft'}
-                    onClick={() => setActiveFilePath(document.path)}
+                    className="pane-header-button"
+                    title="Quick Open (Ctrl+P / Cmd+P)"
+                    onClick={() => setShowQuickOpen(true)}
                   >
-                    {fileNameFromPath(document.path)}
-                    {document.text !== document.savedText ? ' •' : ''}
+                    Quick Open
+                  </button>
+                  <span className={`pane-meta ${isDirty ? 'is-dirty' : ''}`}>{saveLabel}</span>
+                  <button
+                    type="button"
+                    className="pane-header-button"
+                    disabled={!activeFilePath || activeDocument?.deleted || !isDirty}
+                    onClick={handleSaveCurrentFile}
+                  >
+                    Save
+                  </button>
+                </header>
+                <div
+                  ref={tabsRef}
+                  className="document-tabs"
+                  role="tablist"
+                  aria-label="Open drafts"
+                >
+                  {documents.map((document) => (
+                    <div className="document-tab" key={document.id}>
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={document.path === activeFilePath}
+                        tabIndex={document.path === activeFilePath ? 0 : -1}
+                        onKeyDown={(event) => {
+                          if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key))
+                            return
+                          event.preventDefault()
+                          const index = documents.indexOf(document)
+                          const next =
+                            event.key === 'Home'
+                              ? 0
+                              : event.key === 'End'
+                                ? documents.length - 1
+                                : (index +
+                                    (event.key === 'ArrowRight' ? 1 : -1) +
+                                    documents.length) %
+                                  documents.length
+                          setActiveFilePath(documents[next].path)
+                          const tab = event.currentTarget
+                            .closest('[role="tablist"]')
+                            .querySelectorAll('[role="tab"]')[next]
+                          requestAnimationFrame(() => {
+                            tab.focus()
+                            tab
+                              .closest('.document-tab')
+                              .scrollIntoView({ block: 'nearest', inline: 'nearest' })
+                          })
+                        }}
+                        title={document.path || 'Untitled draft'}
+                        onClick={() => setActiveFilePath(document.path)}
+                      >
+                        {fileNameFromPath(document.path)}
+                        {document.text !== document.savedText ? ' •' : ''}
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Close ${fileNameFromPath(document.path)}`}
+                        onClick={() => closeDocument(document.path)}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                {saveError && (
+                  <p role="alert" className="workspace-error">
+                    {saveError}
+                  </p>
+                )}
+                <div className="editor-toolbar" role="toolbar" aria-label="Text editing">
+                  <button
+                    type="button"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => runEditorAction('actions.find')}
+                    title="Find (Ctrl+F / Cmd+F)"
+                  >
+                    Find
                   </button>
                   <button
                     type="button"
-                    aria-label={`Close ${fileNameFromPath(document.path)}`}
-                    onClick={() => closeDocument(document.path)}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => runEditorAction('editor.action.startFindReplaceAction')}
+                    title="Replace (Ctrl+H / Cmd+Option+F)"
                   >
-                    ×
+                    Replace
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => runEditorAction('editor.action.gotoLine')}
+                    title="Go to Line (Ctrl+G)"
+                  >
+                    Go to Line
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => runEditorAction('editor.action.quickCommand')}
+                    title="Editor Commands (F1)"
+                  >
+                    Commands
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={wordWrap}
+                    onClick={toggleWordWrap}
+                    title="Toggle Word Wrap (Alt+Z / Option+Z)"
+                  >
+                    Word Wrap
                   </button>
                 </div>
-              ))}
-            </div>
-            {saveError && (
-              <p role="alert" className="workspace-error">
-                {saveError}
-              </p>
-            )}
-            <div className="editor-toolbar" role="toolbar" aria-label="Text editing">
-              <button
-                type="button"
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => runEditorAction('actions.find')}
-                title="Find (Ctrl+F / Cmd+F)"
-              >
-                Find
-              </button>
-              <button
-                type="button"
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => runEditorAction('editor.action.startFindReplaceAction')}
-                title="Replace (Ctrl+H / Cmd+Option+F)"
-              >
-                Replace
-              </button>
-              <button
-                type="button"
-                onClick={() => runEditorAction('editor.action.gotoLine')}
-                title="Go to Line (Ctrl+G)"
-              >
-                Go to Line
-              </button>
-              <button
-                type="button"
-                onClick={() => runEditorAction('editor.action.quickCommand')}
-                title="Editor Commands (F1)"
-              >
-                Commands
-              </button>
-              <button
-                type="button"
-                aria-pressed={wordWrap}
-                onClick={toggleWordWrap}
-                title="Toggle Word Wrap (Alt+Z / Option+Z)"
-              >
-                Word Wrap
-              </button>
-            </div>
-            <div className="pane-body">
-              <EditorPane
-                onReady={handleEditorReady}
-                onChange={handleOnChange}
-                value={editorText}
-                key={editorSession}
-                documentId={activeDocument?.id}
-                openDocumentIds={documents.map((document) => document.id)}
-              />
-            </div>
-          </div>
-          {visiblePreview ? (
-            <div
-              className="resizer workspace-resizer"
-              role="separator"
-              tabIndex={0}
-              aria-label="Resize Editor and Preview"
-              aria-orientation="vertical"
-              aria-valuemin={Math.round(minEditorWidth)}
-              aria-valuemax={Math.round(availablePaneWidth - minEditorWidth)}
-              aria-valuenow={Math.round(effectiveEditorWidth)}
-              onKeyDown={(event) => resizeWithKeyboard('editor', event)}
-              onDoubleClick={() => setEditorWidth(null)}
-              onMouseDown={startDrag('editor')}
-            />
-          ) : null}
-          {visiblePreview ? (
-            <div className="workspace-pane workspace-preview-pane">
-              <header className="pane-header">
-                <span className="pane-title">Rendered Contract</span>
-                <button
-                  type="button"
-                  className="pane-header-button"
-                  onClick={() => setShowPreview(false)}
-                >
-                  Hide Preview
-                </button>
-              </header>
-              <div
-                ref={previewRef}
-                className="pane-body"
-                tabIndex={0}
-                aria-label="Rendered contract preview"
-              >
-                <OutputPane html={HTMLText} />
+                <div className="pane-body">
+                  <EditorPane
+                    onReady={handleEditorReady}
+                    onChange={handleOnChange}
+                    value={editorText}
+                    key={editorSession}
+                    documentId={activeDocument?.id}
+                    openDocumentIds={documents.map((document) => document.id)}
+                  />
+                </div>
               </div>
-            </div>
-          ) : null}
+              {visiblePreview ? (
+                <div
+                  className="resizer workspace-resizer"
+                  role="separator"
+                  tabIndex={0}
+                  aria-label="Resize Editor and Preview"
+                  aria-orientation="vertical"
+                  aria-valuemin={Math.round(minEditorWidth)}
+                  aria-valuemax={Math.round(availablePaneWidth - minEditorWidth)}
+                  aria-valuenow={Math.round(effectiveEditorWidth)}
+                  onKeyDown={(event) => resizeWithKeyboard('editor', event)}
+                  onDoubleClick={() => setEditorWidth(null)}
+                  onMouseDown={startDrag('editor')}
+                />
+              ) : null}
+              {visiblePreview ? (
+                <div className="workspace-pane workspace-preview-pane">
+                  <header className="pane-header">
+                    <span className="pane-title">Rendered Contract</span>
+                    <button
+                      type="button"
+                      className="pane-header-button"
+                      onClick={() => setShowPreview(false)}
+                    >
+                      Hide Preview
+                    </button>
+                  </header>
+                  <div
+                    ref={previewRef}
+                    className="pane-body"
+                    tabIndex={0}
+                    aria-label="Rendered contract preview"
+                  >
+                    <OutputPane html={HTMLText} />
+                  </div>
+                </div>
+              ) : null}
+            </>
+          )}
         </div>
       </div>
       <footer className="workspace-status-bar">
-        <span>{currentFileLabel}</span>
+        <span className="active-file-path" title={activeFilePath}>
+          {activeFilePath || 'No file open'}
+        </span>
         <span>{wordCount} words</span>
         <button
           type="button"

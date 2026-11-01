@@ -17,12 +17,21 @@ feature archives exist for this imported baseline.
 
 - [ ] 7. **Complete the contract markup language** - Define and implement the next language constructs and their shared core/CLI behavior.
 - [ ] 8. **Develop the contract editing experience** - Improve drafting and navigation with Obsidian and VS Code as reference experiences.
+  - [x] 8a. **Local-file welcome flow** - Open a project folder from File Explorer, optionally creating an example file before rendering.
 - [ ] 9. **Add lawyer-focused word-processing tools** - Implement selected capabilities lawyers expect when editing contracts in Microsoft Word.
 
 > TODO (confirm): Items 7-9 are roadmap milestones, not implementation-ready
 > slices. Agree the first milestone's language scope and split it into small
 > features before implementation. Do not assign unconfirmed semantics or Word
 > compatibility requirements.
+
+The next language priority within item 7 is the define command, covering inline
+and elsewhere-defined terms across sections/blocks. Subsequent language work
+must support referenceable clauses and automatically updated references;
+editor-assisted reference insertion belongs to item 8. Exact syntax and the
+remaining internal order require a reviewed feature spec. Preserve block-specific
+rules and the distinction between marked clauses and unmarked continuation text.
+See project-plan.md's markup language direction and separately labeled suggestions.
 
 Product direction within these milestones (not additional numbered features):
 
@@ -39,3 +48,6 @@ Product direction within these milestones (not additional numbered features):
 
 > TODO (confirm): Defined Terms and Table of Contents are placeholder panels.
 > Confirm their scope and ordering within the language and editor milestones.
+
+Execution priority: the user selected feature 8a next, ahead of language milestone 7.
+The no-folder File Explorer offers Open Folder and Open Folder (with example file); ordinary New File creates a blank draft.

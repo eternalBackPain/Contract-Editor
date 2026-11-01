@@ -122,43 +122,46 @@ export function useExplorerState({ openFilePath = '', onOpenFile }) {
     })
   }, [])
 
-  const openProject = useCallback(async () => {
-    if (!window.api?.openProjectFolder) return
+  const openProject = useCallback(
+    async (withExample = false) => {
+      if (!window.api?.openProjectFolder) return
 
-    const root = await window.api.openProjectFolder()
-    if (!root) return
+      const root = await window.api.openProjectFolder(withExample)
+      if (!root) return
 
-    setProjectRoot(root)
-    setNodeMap({
-      [root.path]: {
-        ...root,
-        parentPath: '',
-        loaded: false,
-        childPaths: []
-      }
-    })
+      setProjectRoot(root)
+      setNodeMap({
+        [root.path]: {
+          ...root,
+          parentPath: '',
+          loaded: false,
+          childPaths: []
+        }
+      })
 
-    const persistedRaw = localStorage.getItem(toStorageKey(root.path))
-    if (persistedRaw) {
-      try {
-        const persisted = JSON.parse(persistedRaw)
-        setExpandedPaths(new Set(persisted.expandedPaths || [root.path]))
-        setFocusedPath(persisted.focusedPath || root.path)
-        setScrollTop(Number.isFinite(persisted.scrollTop) ? persisted.scrollTop : 0)
-      } catch {
+      const persistedRaw = localStorage.getItem(toStorageKey(root.path))
+      if (persistedRaw) {
+        try {
+          const persisted = JSON.parse(persistedRaw)
+          setExpandedPaths(new Set(persisted.expandedPaths || [root.path]))
+          setFocusedPath(persisted.focusedPath || root.path)
+          setScrollTop(Number.isFinite(persisted.scrollTop) ? persisted.scrollTop : 0)
+        } catch {
+          setExpandedPaths(new Set([root.path]))
+          setFocusedPath(root.path)
+          setScrollTop(0)
+        }
+      } else {
         setExpandedPaths(new Set([root.path]))
         setFocusedPath(root.path)
         setScrollTop(0)
       }
-    } else {
-      setExpandedPaths(new Set([root.path]))
-      setFocusedPath(root.path)
-      setScrollTop(0)
-    }
 
-    await loadChildren(root.path, { force: true })
-    return root
-  }, [loadChildren])
+      await loadChildren(root.path, { force: true })
+      return root
+    },
+    [loadChildren]
+  )
 
   const toggleFolder = useCallback(
     async (folderPath) => {

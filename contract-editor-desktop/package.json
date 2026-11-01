@@ -12,7 +12,7 @@
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
-    "test": "npm run test -w @contract-editor/core && npm run test -w @contract-editor/cli",
+    "test": "node --test test/*.test.mjs && npm run test -w @contract-editor/core && npm run test -w @contract-editor/cli",
     "test:core": "npm run test -w @contract-editor/core",
     "test:cli": "npm run test -w @contract-editor/cli",
     "start": "electron-vite preview",

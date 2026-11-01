@@ -843,3 +843,29 @@ input {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+.welcome-panel {
+  margin: auto;
+  padding: 24px;
+  max-width: 520px;
+}
+.welcome-panel h1 {
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+.welcome-panel p {
+  margin: 10px 0;
+}
+.active-file-path {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.explorer-empty-state .explorer-action-button {
+  display: block;
+  margin-bottom: 10px;
+  white-space: normal;
+  text-align: left;
+}
